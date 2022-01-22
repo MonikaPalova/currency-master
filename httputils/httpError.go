@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-type CoinApiError struct {
+type HttpError struct {
 	Err        error
 	Message    string
 	StatusCode int
@@ -26,7 +26,7 @@ func RespondWithError(w http.ResponseWriter, statusCode int, err error, msg stri
 	}
 }
 
-func RespondWithCoinApiError(w http.ResponseWriter, err *CoinApiError, msg string) {
+func RespondWithHttpError(w http.ResponseWriter, err *HttpError, msg string) {
 	errMsg := "[" + msg + "],[" + err.Message + "]"
 	if err.Err != nil {
 		errMsg += ": [" + err.Err.Error() + "]"

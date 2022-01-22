@@ -21,10 +21,10 @@ func NewAssetsHandler() *AssetsHandler {
 	return &a
 }
 
-func (a AssetsHandler) Get(w http.ResponseWriter, r *http.Request) {
-	assets, coinApiError := a.client.GetAssets()
-	if coinApiError != nil {
-		httputils.RespondWithCoinApiError(w, coinApiError, "Could not retrieve assets from external api")
+func (a AssetsHandler) GetAll(w http.ResponseWriter, r *http.Request) {
+	assets, httpError := a.client.GetAssets()
+	if httpError != nil {
+		httputils.RespondWithHttpError(w, httpError, "Could not retrieve assets from external api")
 		return
 	}
 
@@ -38,15 +38,15 @@ func (a AssetsHandler) Get(w http.ResponseWriter, r *http.Request) {
 
 func (a AssetsHandler) GetById(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
-	assets, coinApiError := a.client.GetAssetById(id)
-	if coinApiError != nil {
-		httputils.RespondWithCoinApiError(w, coinApiError, "Could not retrieve asset with id ["+id+"] from external api")
+	asset, httpError := a.client.GetAssetById(id)
+	if httpError != nil {
+		httputils.RespondWithHttpError(w, httpError, "Could not retrieve asset with id ["+id+"] from external api")
 		return
 	}
 
-	jsonResponse, err := json.Marshal(assets)
+	jsonResponse, err := json.Marshal(asset)
 	if err != nil {
-		httputils.RespondWithError(w, http.StatusInternalServerError, err, "Couldn not convert assets to JSON")
+		httputils.RespondWithError(w, http.StatusInternalServerError, err, "Couldn not convert asset to JSON")
 	}
 	w.WriteHeader(http.StatusAccepted)
 	w.Write(jsonResponse)
