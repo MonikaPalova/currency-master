@@ -1,11 +1,12 @@
 package coinapi
 
 import (
-	"currency-master/model/wallet"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+
+	"github.com/MonikaPalova/currency-master/model/wallet"
 )
 
 const (
@@ -18,8 +19,15 @@ type Client struct {
 	HttpClient *http.Client
 }
 
+func NewClient() *Client {
+	var c Client
+	c.HttpClient = &http.Client{}
+
+	return &c
+}
+
 func (c Client) GetAssets() ([]wallet.Asset, error) {
-	request, err := setUpRequest(http.MethodGet, "/v1/assets/DUB,DOGE", nil)
+	request, err := setUpRequest(http.MethodGet, "/v1/assets", nil)
 	if err != nil {
 		return nil, fmt.Errorf("could not set up get assets request: %s", err.Error())
 	}
