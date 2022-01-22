@@ -31,4 +31,5 @@ func (a *Application) setupHTTP() {
 func (a *Application) setupAssetsHandler() {
 	assetsHandler := handlers.NewAssetsHandler()
 	a.router.Path("/assets").Methods(http.MethodGet).HandlerFunc(assetsHandler.Get)
+	a.router.Path("/assets/{id}").Methods(http.MethodGet).HandlerFunc(assetsHandler.GetById)
 }
