@@ -1,16 +1,15 @@
 package model
 
-import "github.com/MonikaPalova/currency-master/coinapi"
-
-type Wallet struct {
-	assets       *[]coinapi.Asset
-	acquisitions *[]Acquisition
-
-	assetsClient *coinapi.Client
+// To get assets for user you get this class from db
+type UserAsset struct {
+	username string
+	assetId  string
+	quantity uint8
 }
 
 type Acquisition struct {
-	asset    *coinapi.Asset
+	username string
+	assetId  string
 	quantity float64
 	priceUSD float64
 }
