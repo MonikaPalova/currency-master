@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/gorilla/mux"
+
 	"github.com/MonikaPalova/currency-master/coinapi"
 	"github.com/MonikaPalova/currency-master/httputils"
 )
@@ -20,9 +22,25 @@ func NewAssetsHandler() *AssetsHandler {
 }
 
 func (a AssetsHandler) Get(w http.ResponseWriter, r *http.Request) {
-	assets, err := a.client.GetAssets()
+	assets, coinApiError := a.client.GetAssets()
+	if coinApiError != nil {
+		httputils.RespondWithCoinApiError(w, coinApiError, "Could not retrieve assets from external api")
+		return
+	}
+
+	jsonResponse, err := json.Marshal(assets)
 	if err != nil {
-		httputils.RespondWithError(w, http.StatusInternalServerError, err, "Could not retrieve assets from external api")
+		httputils.RespondWithError(w, http.StatusInternalServerError, err, "Couldn not convert assets to JSON")
+	}
+	w.WriteHeader(http.StatusAccepted)
+	w.Write(jsonResponse)
+}
+
+func (a AssetsHandler) GetById(w http.ResponseWriter, r *http.Request) {
+	id := mux.Vars(r)["id"]
+	assets, coinApiError := a.client.GetAssetById(id)
+	if coinApiError != nil {
+		httputils.RespondWithCoinApiError(w, coinApiError, "Could not retrieve asset with id ["+id+"] from external api")
 		return
 	}
 
