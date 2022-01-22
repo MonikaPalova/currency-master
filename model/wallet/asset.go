@@ -2,13 +2,15 @@ package wallet
 
 import (
 	"encoding/json"
+	"time"
 )
 
 type Asset struct {
-	ID       string  `json:"id"`
-	Name     string  `json:"name"`
-	IsCrypto bool    `json:"isCrypto"`
-	PriceUSD float64 `json:"priceUSD"`
+	ID         string    `json:"id"`
+	Name       string    `json:"name"`
+	IsCrypto   bool      `json:"isCrypto"`
+	PriceUSD   float64   `json:"priceUSD"`
+	LastUpdate time.Time `json:"lastUpdate"`
 }
 
 func (a *Asset) UnmarshalJSON(bytes []byte) (err error) {
@@ -26,6 +28,7 @@ func (a *Asset) UnmarshalJSON(bytes []byte) (err error) {
 	a.Name = asset.Name
 	a.IsCrypto = asset.IsCrypto != 0
 	a.PriceUSD = asset.PriceUSD
+	a.LastUpdate = time.Now()
 
 	return err
 }
