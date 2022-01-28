@@ -1,0 +1,52 @@
+.row {
+    display: flex;
+    flex-direction: row;
+}
+
+.column {
+    display: flex;
+    flex-direction: column;
+}
+
+a{
+    text-decoration: none;
+    color:black;
+}
+
+body{
+    margin:0;
+    background-color: #F6F7F9;
+}
+
+body > nav {
+    height:100%;
+    width:13%;
+background-color:#79A0C9;
+margin:0;
+padding:1%;
+position: fixed;
+top:0;
+left:0;
+}
+
+body >main {
+    position: relative;
+    width: 75%;
+    margin-left: 21%;
+    margin-right: 4%;
+  }
+
+.coloured-field {
+    background: #D3DDE9;
+    border: 2px solid #79A0C9;
+}
+
+.centered-field {
+    margin: 2% auto;
+}
+
+.nav-link{
+    padding: 2%;
+    height: 5%;
+    font-size: 1.2rem;
+}
