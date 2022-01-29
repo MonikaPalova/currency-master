@@ -18,8 +18,8 @@ type Database struct {
 	UsersDBHandler *UsersDBHandler
 }
 
-func NewDB(user, password, dbname string) (*Database, error) {
-	dbConnStr := fmt.Sprintf("%s:%s@/%s?multiStatements=true", user, password, dbname)
+func NewDB(user, password string) (*Database, error) {
+	dbConnStr := fmt.Sprintf("%s:%s@/?multiStatements=true&parseTime=true", user, password)
 	conn, err := sql.Open("mysql", dbConnStr)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't connect to database: %v", err)

@@ -30,7 +30,7 @@ func New() Application {
 
 func (a *Application) initDB() {
 	var err error
-	a.db, err = NewDB(user, password, dbname)
+	a.db, err = NewDB(user, password)
 	if err != nil {
 		log.Fatalln(err.Error())
 	}

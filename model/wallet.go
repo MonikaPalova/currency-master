@@ -1,5 +1,6 @@
 package model
 
+import "time"
 // To get assets for user you get this class from db
 type UserAsset struct {
 	username string
@@ -12,6 +13,7 @@ type Acquisition struct {
 	assetId  string
 	quantity float64
 	priceUSD float64
+	created time.Time
 }
 
 // func (w *Wallet) GetValuation() float64 {
