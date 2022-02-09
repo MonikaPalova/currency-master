@@ -5,6 +5,7 @@ import "time"
 type UserAsset struct {
 	username string
 	assetId  string
+	name string
 	quantity uint8
 }
 
