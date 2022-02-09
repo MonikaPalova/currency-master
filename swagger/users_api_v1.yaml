@@ -1,0 +1,313 @@
+openapi: 3.0.0
+title: "Users API"
+description: "This API includes all requests related to users"
+version: "1.0.0"
+servers:
+- url: http://localhost:7777/api/v1
+  description: Local server
+tags:
+- name: "Users"
+- name: "User Assets"
+- name: "Login"
+- name: "Logout"
+paths:
+  /users:
+    get:
+      tags:
+      - "Users"
+      summary: "Get users"
+      responses:
+        "200":
+          description: "List of all users"
+          content:
+            application/json:
+              schema:
+                type: array
+                items: 
+                  $ref: "#/components/schemas/User"
+        "401":
+          description: "This request requires authentication"
+      security:
+        - cookieAuth: []
+    post:
+      tags:
+      - "Users"
+      summary: "Create user"
+      requestBody:
+        description: "User to create"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserToCreate"
+      responses:
+        "200":
+          description: "Created user"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          description: "User parameters are missing or incorrect"
+        "409":
+          description: "User with username already exists"
+      security: []
+  /users/{username}:
+    get:
+      tags:
+      - "Users"
+      summary: "Get user by username"
+      parameters:
+      - name: "username"
+        in: "path"
+        description: "Username of user to get"
+        required: true
+        schema:
+          type: "string"
+      responses:
+        "200":
+          description: "Returned user"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: "This request requires authentication"
+        "404":
+          description: "User is not found"
+      security:
+        - cookieAuth: []
+  /users/{username}/assets/{id}:
+    get:
+      tags:
+      - "User Assets"
+      summary: "Get asset with id owned by user"
+      parameters:
+      - name: "username"
+        in: "path"
+        description: "Username of user assets to get"
+        required: true
+        schema:
+          type: "string"
+      - name: "id"
+        in: "path"
+        description: "Id of asset to get"
+        required: true
+        schema:
+          type: "string"
+      responses:
+        "200":
+          description: "Returned user asset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserAsset"
+        "401":
+          description: "This request requires authentication"
+        "404":
+          description: "User is not found"
+      security:
+        - cookieAuth: []
+  /users/{username}/assets/{id}/buy:
+    post:
+      tags:
+      - "User Assets"
+      summary: "Buy asset with id for user"
+      parameters:
+      - name: "username"
+        in: "path"
+        description: "Username of user"
+        required: true
+        schema:
+          type: "string"
+      - name: "id"
+        in: "path"
+        description: "Id of asset to buy"
+        required: true
+        schema:
+          type: "string"
+      requestBody:
+        description: "Asset to buy"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserAsset"
+      responses:
+        "200":
+          description: "User asset after the operation"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserAsset"
+        "401":
+          description: "This request requires authentication"
+        "404":
+          description: "User is not found"
+        "409":
+          description: "Not enough money"
+      security:
+        - cookieAuth: []
+  /users/{username}/assets/{id}/sell:
+    post:
+      tags:
+      - "User Assets"
+      summary: "Sell asset with id for user"
+      parameters:
+      - name: "username"
+        in: "path"
+        description: "Username of user"
+        required: true
+        schema:
+          type: "string"
+      - name: "id"
+        in: "path"
+        description: "Id of asset to sell"
+        required: true
+        schema:
+          type: "string"
+      requestBody:
+        description: "Asset to sell"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserAsset"
+      responses:
+        "200":
+          description: "User asset after the operation"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserAsset"
+        "401":
+          description: "This request requires authentication"
+        "404":
+          description: "User is not found"
+        "409":
+          description: "Not enough quantity to sell"
+      security:
+        - cookieAuth: []
+  /users/{username}/assets:
+    get:
+      tags:
+      - "User Assets"
+      summary: "Get assets owned by user"
+      parameters:
+      - name: "username"
+        in: "path"
+        description: "Username of user assets to get"
+        required: true
+        schema:
+          type: "string"
+      responses:
+        "200":
+          description: "Returned user assets"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserAsset"
+        "401":
+          description: "This request requires authentication"
+        "404":
+          description: "User is not found"
+      security:
+        - cookieAuth: []
+  /users/{username}/login:
+    post:
+      tags:
+      - "Login"
+      summary: "Create a new session and set cookie for user"
+      requestBody:
+        description: "Login credentials"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginCredentials"
+      parameters:
+      - name: "username"
+        in: "path"
+        description: "Username of user to log in"
+        required: true
+        schema:
+          type: "string"
+      responses:
+        "200":
+          description: "Session was created and cookie is set"
+          headers: 
+            Set-Cookie:
+              schema: 
+                type: "string"
+                example: "CURRENCY_MASTER_SESSION_ID=abcde12345; Path=/; HttpOnly"
+        "401":
+          description: "Incorrect credentials"
+      security: []
+  /users/{username}/logout:
+    post:
+      tags:
+      - "Logout"
+      summary: "Deletes the session of the user if it exists"
+      parameters:
+      - name: "username"
+        in: "path"
+        description: "Username of user to log out"
+        required: true
+        schema:
+          type: "string"
+      responses:
+        "200":
+          description: "Session was deleted successfully"
+          headers: 
+            Set-Cookie:
+              schema: 
+                type: "string"
+                example: ""
+      security:
+        - cookieAuth: []
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: CURRENCY_MASTER_SESSION_ID
+  schemas:
+    LoginCredentials:
+      type: "object"
+      required:
+        - base64password
+      properties:
+        base64password:
+          type: string
+    User:
+      type: "object"
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+        assets:
+          type: array
+          items: 
+            $ref: "#/components/schemas/UserAsset"
+        valuation:
+          type: number
+    UserAsset:
+      type: object
+      properties:
+        assetId:
+          type: string
+        quantity:
+          type: number
+    UserToCreate:
+      type: "object"
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+        base64Password:
+          type: string
