@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 
+	"github.com/MonikaPalova/currency-master/config"
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -18,8 +19,9 @@ type Database struct {
 	UsersDBHandler *UsersDBHandler
 }
 
-func NewDB(user, password string) (*Database, error) {
-	dbConnStr := fmt.Sprintf("%s:%s@/?multiStatements=true&parseTime=true", user, password)
+func NewDB() (*Database, error) {
+	config := config.NewMysql()
+	dbConnStr := fmt.Sprintf("%s:%s@/?multiStatements=true&parseTime=true", config.User, config.Password)
 	conn, err := sql.Open("mysql", dbConnStr)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't connect to database, %v", err)

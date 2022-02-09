@@ -10,10 +10,6 @@ import (
 )
 
 const (
-	user     = "root"
-	password = ""
-	dbname   = "currency-master"
-
 	USERS_API_V1       = "/api/v1/users"
 	ASSETS_API_V1      = "/api/v1/assets"
 	USER_ASSETS_API_V1 = "/api/v1/users/{username}/assets"
@@ -34,7 +30,7 @@ func New() Application {
 
 func (a *Application) initDB() {
 	var err error
-	a.db, err = NewDB(user, password)
+	a.db, err = NewDB()
 	if err != nil {
 		log.Fatalln(err.Error())
 	}

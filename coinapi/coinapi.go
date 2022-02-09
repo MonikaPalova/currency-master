@@ -6,24 +6,21 @@ import (
 	"io"
 	"net/http"
 	"strconv"
-)
 
-const (
-	baseUrl      = "https://rest.coinapi.io"
-	apiKeyHeader = "X-CoinAPI-Key"
-	apiKey       = "D8096E91-86D8-4998-B5B8-C785CE5D58AD"
+	"github.com/MonikaPalova/currency-master/config"
 )
 
 type Client struct {
 	httpClient *http.Client
+	config     *config.CoinAPI
 }
 
 func NewClient() *Client {
-	return &Client{&http.Client{}}
+	return &Client{&http.Client{}, config.NewCoinAPI()}
 }
 
 func (c Client) GetAssets() ([]Asset, error) {
-	request, err := setUpRequest(http.MethodGet, "/v1/assets", nil)
+	request, err := c.setUpRequest(http.MethodGet, c.config.AssetsUrl, nil)
 	if err != nil {
 		return nil, fmt.Errorf("could not set up get assets request, %v", err.Error())
 	}
@@ -59,7 +56,7 @@ func removeInvalidAssets(assets []Asset) []Asset {
 }
 
 func (c Client) GetAssetById(id string) (*Asset, error) {
-	request, err := setUpRequest(http.MethodGet, "/v1/assets/"+id, nil)
+	request, err := c.setUpRequest(http.MethodGet, c.config.AssetsUrl+"/"+id, nil)
 	if err != nil {
 		return nil, fmt.Errorf("could not set up request get asset by id with assetId %s, %v", id, err.Error())
 	}
@@ -100,14 +97,13 @@ func validateResponseCode(response *http.Response) error {
 	return nil
 }
 
-func setUpRequest(method, endpoint string, body io.Reader) (*http.Request, error) {
-	url := baseUrl + endpoint
+func (c Client) setUpRequest(method, url string, body io.Reader) (*http.Request, error) {
 	request, err := http.NewRequest(method, url, body)
 	if err != nil {
 		return nil, err
 	}
 
-	request.Header.Add(apiKeyHeader, apiKey)
+	request.Header.Add(c.config.ApiKeyHeader, c.config.ApiKey)
 	request.Header.Add("Accept", "application/json")
 	return request, nil
 }
