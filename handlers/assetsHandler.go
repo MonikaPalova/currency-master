@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -15,16 +16,13 @@ type AssetsHandler struct {
 }
 
 func NewAssetsHandler() *AssetsHandler {
-	var a AssetsHandler
-	a.client = coinapi.NewClient()
-
-	return &a
+	return &AssetsHandler{coinapi.NewClient()}
 }
 
 func (a AssetsHandler) GetAll(w http.ResponseWriter, r *http.Request) {
-	assets, httpError := a.client.GetAssets()
-	if httpError != nil {
-		httputils.RespondWithHttpError(w, httpError, "Could not retrieve assets from external api")
+	assets, err := a.client.GetAssets()
+	if err != nil {
+		httputils.RespondWithError(w, http.StatusInternalServerError, err, "Could not retrieve assets from external api")
 		return
 	}
 
@@ -38,9 +36,13 @@ func (a AssetsHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 
 func (a AssetsHandler) GetById(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
-	asset, httpError := a.client.GetAssetById(id)
-	if httpError != nil {
-		httputils.RespondWithHttpError(w, httpError, "Could not retrieve asset with id ["+id+"] from external api")
+	asset, err := a.client.GetAssetById(id)
+	if err != nil {
+		httputils.RespondWithError(w, http.StatusInternalServerError, err, fmt.Sprintf("Could not retrieve asset with id %s from external api", id))
+		return
+	}
+	if asset == nil {
+		httputils.RespondWithError(w, http.StatusNotFound, nil, fmt.Sprintf("Could not retrieve asset with id %s from external api", id))
 		return
 	}
 

@@ -2,11 +2,10 @@ package coinapi
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"strconv"
-
-	"github.com/MonikaPalova/currency-master/httputils"
 )
 
 const (
@@ -20,21 +19,18 @@ type Client struct {
 }
 
 func NewClient() *Client {
-	var c Client
-	c.httpClient = &http.Client{}
-
-	return &c
+	return &Client{&http.Client{}}
 }
 
-func (c Client) GetAssets() ([]Asset, *httputils.HttpError) {
+func (c Client) GetAssets() ([]Asset, error) {
 	request, err := setUpRequest(http.MethodGet, "/v1/assets", nil)
 	if err != nil {
-		return nil, &httputils.HttpError{Err: err, Message: "could not set up get assets request", StatusCode: http.StatusInternalServerError}
+		return nil, fmt.Errorf("could not set up get assets request, %v", err.Error())
 	}
 
 	response, err := c.httpClient.Do(request)
 	if err != nil {
-		return nil, &httputils.HttpError{Err: err, Message: "could not execute get assets request", StatusCode: http.StatusInternalServerError}
+		return nil, fmt.Errorf("could not execute get assets request, %v", err.Error())
 	}
 	defer response.Body.Close()
 
@@ -44,7 +40,7 @@ func (c Client) GetAssets() ([]Asset, *httputils.HttpError) {
 
 	var assets []Asset
 	if err = json.NewDecoder(response.Body).Decode(&assets); err != nil {
-		return nil, &httputils.HttpError{Err: err, Message: "could not parse get assets JSON response", StatusCode: http.StatusInternalServerError}
+		return nil, fmt.Errorf("could not parse get assets JSON response, %v", err.Error())
 	}
 
 	assets = removeInvalidAssets(assets)
@@ -62,15 +58,15 @@ func removeInvalidAssets(assets []Asset) []Asset {
 	return filtered
 }
 
-func (c Client) GetAssetById(id string) (*Asset, *httputils.HttpError) {
+func (c Client) GetAssetById(id string) (*Asset, error) {
 	request, err := setUpRequest(http.MethodGet, "/v1/assets/"+id, nil)
 	if err != nil {
-		return nil, &httputils.HttpError{Err: err, Message: "could not set up request get asset by id with assetId [" + id + "]", StatusCode: http.StatusInternalServerError}
+		return nil, fmt.Errorf("could not set up request get asset by id with assetId %s, %v", id, err.Error())
 	}
 
 	response, err := c.httpClient.Do(request)
 	if err != nil {
-		return nil, &httputils.HttpError{Err: err, Message: "could not execute request get asset by id [" + id + "]", StatusCode: http.StatusInternalServerError}
+		return nil, fmt.Errorf("could not execute request get asset by id %s, %v", id, err.Error())
 	}
 	defer response.Body.Close()
 
@@ -80,27 +76,26 @@ func (c Client) GetAssetById(id string) (*Asset, *httputils.HttpError) {
 
 	var assets []Asset
 	if err = json.NewDecoder(response.Body).Decode(&assets); err != nil {
-		return nil, &httputils.HttpError{Err: err, Message: "could not parse get asset by id JSON response", StatusCode: http.StatusInternalServerError}
+		return nil, fmt.Errorf("could not parse get asset by id JSON response, %v", err.Error())
 	}
 
 	if len(assets) == 0 {
-		return nil, &httputils.HttpError{Err: nil, Message: "Asset with id [" + id + "] doesn't exist", StatusCode: http.StatusNotFound}
+		return nil, nil
 	}
 	return &assets[0], nil
 }
 
-func validateResponseCode(response *http.Response) *httputils.HttpError {
+func validateResponseCode(response *http.Response) error {
 	if response.StatusCode != http.StatusOK {
 		var responseBody struct {
 			Error string `json:"error"`
 		}
 
-		var err error
-		if err = json.NewDecoder(response.Body).Decode(&responseBody); err != nil {
-			return &httputils.HttpError{Err: err, Message: "could not parse JSON response with error", StatusCode: http.StatusInternalServerError}
+		if err := json.NewDecoder(response.Body).Decode(&responseBody); err != nil {
+			return fmt.Errorf("could not parse JSON response with error, %v", err.Error())
 		}
 
-		return &httputils.HttpError{Err: err, Message: "coin API returned code [" + strconv.Itoa(response.StatusCode) + "] with messsage [" + responseBody.Error + "]", StatusCode: response.StatusCode}
+		return fmt.Errorf("coin API returned code %s with messsage %s", strconv.Itoa(response.StatusCode), responseBody.Error)
 	}
 	return nil
 }

@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/MonikaPalova/currency-master/db"
@@ -22,51 +23,63 @@ func (u UsersHandler) Post(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := user.ValidateData(); err != nil {
-		httputils.RespondWithHttpError(w, err, "user body is invalid. ")
+		httputils.RespondWithError(w, http.StatusBadRequest, err, "user body is invalid")
 		return
 	}
 
-	createdUser, dbError := u.DB.Create(user)
-	if dbError != nil {
-		httputils.RespondWithHttpError(w, dbError, "Could not create user in database. ")
+	createdUser, err := u.DB.Create(user)
+	if err != nil {
+		httputils.RespondWithError(w, http.StatusInternalServerError, err, "could not create user in database")
 		return
+	}
+	if createdUser == nil {
+		httputils.RespondWithError(w, http.StatusConflict, nil, fmt.Sprintf("user with username %s already exists", user.Username))
+		return
+
 	}
 
 	jsonResponse, err := json.Marshal(createdUser)
 	if err != nil {
-		httputils.RespondWithError(w, http.StatusBadRequest, err, "Couldn not convert created user to JSON. Probably it was malformed")
+		httputils.RespondWithError(w, http.StatusInternalServerError, err, "could not convert created user to JSON. Probably it was malformed")
+		return
 	}
-	w.WriteHeader(http.StatusAccepted)
+	w.WriteHeader(http.StatusOK)
 	w.Write(jsonResponse)
 }
 
 func (u UsersHandler) GetAll(w http.ResponseWriter, r *http.Request) {
-	users, dbError := u.DB.GetAll()
-	if dbError != nil {
-		httputils.RespondWithHttpError(w, dbError, "Could not retrieve users from database. ")
+	users, err := u.DB.GetAll()
+	if err != nil {
+		httputils.RespondWithError(w, http.StatusInternalServerError, err, "could not retrieve users from database")
 		return
 	}
 
 	jsonResponse, err := json.Marshal(users)
 	if err != nil {
-		httputils.RespondWithError(w, http.StatusInternalServerError, err, "Couldn not convert users to JSON")
+		httputils.RespondWithError(w, http.StatusInternalServerError, err, "could not convert users to JSON")
+		return
 	}
-	w.WriteHeader(http.StatusAccepted)
+	w.WriteHeader(http.StatusOK)
 	w.Write(jsonResponse)
 }
 
 func (u UsersHandler) GetByUsername(w http.ResponseWriter, r *http.Request) {
 	username := mux.Vars(r)["username"]
-	user, dbError := u.DB.GetByUsername(username)
-	if dbError != nil {
-		httputils.RespondWithHttpError(w, dbError, "Could not retrieve user with username ["+username+"] from database. ")
+	user, err := u.DB.GetByUsername(username)
+	if err != nil {
+		httputils.RespondWithError(w, http.StatusInternalServerError, err, fmt.Sprintf("could not retrieve user with username %s from database", username))
+		return
+	}
+	if user == nil {
+		httputils.RespondWithError(w, http.StatusNotFound, nil, fmt.Sprintf("user with username %s doesn't exist", username))
 		return
 	}
 
 	jsonResponse, err := json.Marshal(user)
 	if err != nil {
-		httputils.RespondWithError(w, http.StatusInternalServerError, err, "Couldn not convert user to JSON")
+		httputils.RespondWithError(w, http.StatusInternalServerError, err, "Could not convert user to JSON")
+		return
 	}
-	w.WriteHeader(http.StatusAccepted)
+	w.WriteHeader(http.StatusOK)
 	w.Write(jsonResponse)
 }

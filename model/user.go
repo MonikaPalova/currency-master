@@ -1,31 +1,30 @@
 package model
 
 import (
-	"net/http"
+	"fmt"
 	"strings"
+)
 
-	"github.com/MonikaPalova/currency-master/httputils"
+const (
+	NOT_BLANK_ERR_TEMPLATE = "%s should not be blank"
 )
 
 type User struct {
-	Username    string `json:"username"`
-	Password    string `json:"password,omitempty"`
-	Email       string `json:"email"`
-	PhoneNumber string `json:"phoneNumber"`
+	Username string `json:"username"`
+	Password string `json:"password,omitempty"`
+	Email    string `json:"email"`
 }
 
-func (u User) ValidateData() *httputils.HttpError {
+// TODO finish
+func (u User) ValidateData() error {
 	if strings.TrimSpace(u.Username) == "" {
-		return &httputils.HttpError{Err: nil, Message: "[username] should not be blank", StatusCode: http.StatusBadRequest}
+		return fmt.Errorf(NOT_BLANK_ERR_TEMPLATE, "username")
 	}
 	if strings.TrimSpace(u.Password) == "" {
-		return &httputils.HttpError{Err: nil, Message: "[password] should not be blank", StatusCode: http.StatusBadRequest}
+		return fmt.Errorf(NOT_BLANK_ERR_TEMPLATE, "password")
 	}
 	if strings.TrimSpace(u.Email) == "" {
-		return &httputils.HttpError{Err: nil, Message: "[email] should not be blank", StatusCode: http.StatusBadRequest}
-	}
-	if strings.TrimSpace(u.PhoneNumber) == "" {
-		return &httputils.HttpError{Err: nil, Message: "[phoneNumber] should not be blank", StatusCode: http.StatusBadRequest}
+		return fmt.Errorf(NOT_BLANK_ERR_TEMPLATE, "email")
 	}
 
 	return nil
