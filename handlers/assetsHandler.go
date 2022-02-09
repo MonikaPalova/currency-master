@@ -30,7 +30,7 @@ func (a AssetsHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		httputils.RespondWithError(w, http.StatusInternalServerError, err, "Couldn not convert assets to JSON")
 	}
-	w.WriteHeader(http.StatusAccepted)
+	w.WriteHeader(http.StatusOK)
 	w.Write(jsonResponse)
 }
 
@@ -50,6 +50,6 @@ func (a AssetsHandler) GetById(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		httputils.RespondWithError(w, http.StatusInternalServerError, err, "Couldn not convert asset to JSON")
 	}
-	w.WriteHeader(http.StatusAccepted)
+	w.WriteHeader(http.StatusOK)
 	w.Write(jsonResponse)
 }
