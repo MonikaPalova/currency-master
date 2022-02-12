@@ -32,6 +32,7 @@ func (a AssetsHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 
 	if page <= 0 || size <= 0 {
 		httputils.RespondWithError(w, http.StatusBadRequest, nil, "page and size must be specified and positive numbers")
+		return
 	}
 
 	assetsPage, err := a.client.GetAssetPage(page, size)
@@ -43,9 +44,9 @@ func (a AssetsHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	jsonResponse, err := json.Marshal(assetsPage)
 	if err != nil {
 		httputils.RespondWithError(w, http.StatusInternalServerError, err, "Could not convert assets to JSON")
+		return
 	}
-	w.WriteHeader(http.StatusOK)
-	w.Write(jsonResponse)
+	httputils.RespondOK(w, jsonResponse)
 }
 
 func getQueryParam(actual string, defaultValue int) int {
@@ -72,7 +73,7 @@ func (a AssetsHandler) GetById(w http.ResponseWriter, r *http.Request) {
 	jsonResponse, err := json.Marshal(asset)
 	if err != nil {
 		httputils.RespondWithError(w, http.StatusInternalServerError, err, "Couldn not convert asset to JSON")
+		return
 	}
-	w.WriteHeader(http.StatusOK)
-	w.Write(jsonResponse)
+	httputils.RespondOK(w, jsonResponse)
 }

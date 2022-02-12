@@ -2,7 +2,6 @@ package coinapi
 
 import (
 	"encoding/json"
-	"fmt"
 )
 
 type Asset struct {
@@ -27,8 +26,6 @@ func (a *Asset) UnmarshalJSON(bytes []byte) (err error) {
 		PriceUSD float64 `json:"price_usd"`
 	}
 	if err = json.Unmarshal(bytes, &asset); err != nil {
-		fmt.Println(string(bytes))
-		fmt.Println(err.Error())
 		return err
 	}
 

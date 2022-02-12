@@ -1,20 +1,21 @@
 package model
 
 import "time"
+
 // To get assets for user you get this class from db
 type UserAsset struct {
-	username string
-	assetId  string
-	name string
-	quantity uint8
+	Username string `json:"username,omitempty"`
+	AssetId  string `json:"assetId"`
+	Name     string `json:"name"`
+	Quantity uint8  `json:"quantity"`
 }
 
 type Acquisition struct {
-	username string
-	assetId  string
-	quantity float64
-	priceUSD float64
-	created time.Time
+	Username string    `json:"username"`
+	AssetId  string    `json:"assetId"`
+	Quantity float64   `json:"quantity"`
+	PriceUSD float64   `json:"priceUSD"`
+	Created  time.Time `json:"purchaseDate"`
 }
 
 // func (w *Wallet) GetValuation() float64 {
@@ -32,7 +33,3 @@ type Acquisition struct {
 // func (w *Wallet) GetAcquisitions() ([]Acquisition, error) {
 // 	//TODO
 // }
-
-func (a Acquisition) Total() float64 {
-	return a.quantity * a.priceUSD
-}

@@ -13,7 +13,8 @@ CREATE TABLE IF NOT EXISTS `USER_ASSETS` (
     `asset_id` VARCHAR(10) NOT NULL,
     `name` VARCHAR(36) NOT NULL,
     `quantity` FLOAT NOT NULL,
-    FOREIGN KEY (username) REFERENCES USERS(username)
+    FOREIGN KEY (username) REFERENCES USERS(username),
+    CONSTRAINT PK_USER_ASSET PRIMARY KEY (username,asset_id)
 );
 
 CREATE TABLE IF NOT EXISTS `ACQUISITIONS` (
@@ -22,7 +23,8 @@ CREATE TABLE IF NOT EXISTS `ACQUISITIONS` (
     `quantity` FLOAT NOT NULL,
     `price_usd` FLOAT NOT NULL,
     `created` DATETIME NOT NULL,
-    FOREIGN KEY (username) REFERENCES USERS(username)
+    FOREIGN KEY (username) REFERENCES USERS(username),
+    CONSTRAINT PK_USER_ASSET PRIMARY KEY (username,asset_id,created)
 );
 
 -- CREATE TABLE IF NOT EXISTS `SESSIONS` (

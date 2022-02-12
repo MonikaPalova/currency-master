@@ -20,3 +20,8 @@ func RespondWithError(w http.ResponseWriter, statusCode int, err error, msg stri
 		w.Write([]byte(errMsg))
 	}
 }
+
+func RespondOK(w http.ResponseWriter, jsonResponse []byte) {
+	w.WriteHeader(http.StatusOK)
+	w.Write(jsonResponse)
+}

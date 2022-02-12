@@ -43,8 +43,7 @@ func (u UsersHandler) Post(w http.ResponseWriter, r *http.Request) {
 		httputils.RespondWithError(w, http.StatusInternalServerError, err, "could not convert created user to JSON. Probably it was malformed")
 		return
 	}
-	w.WriteHeader(http.StatusOK)
-	w.Write(jsonResponse)
+	httputils.RespondOK(w, jsonResponse)
 }
 
 func (u UsersHandler) GetAll(w http.ResponseWriter, r *http.Request) {
@@ -59,8 +58,7 @@ func (u UsersHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 		httputils.RespondWithError(w, http.StatusInternalServerError, err, "could not convert users to JSON")
 		return
 	}
-	w.WriteHeader(http.StatusOK)
-	w.Write(jsonResponse)
+	httputils.RespondOK(w, jsonResponse)
 }
 
 func (u UsersHandler) GetByUsername(w http.ResponseWriter, r *http.Request) {
@@ -80,6 +78,5 @@ func (u UsersHandler) GetByUsername(w http.ResponseWriter, r *http.Request) {
 		httputils.RespondWithError(w, http.StatusInternalServerError, err, "Could not convert user to JSON")
 		return
 	}
-	w.WriteHeader(http.StatusOK)
-	w.Write(jsonResponse)
+	httputils.RespondOK(w, jsonResponse)
 }
