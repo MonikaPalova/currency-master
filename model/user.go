@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	NOT_BLANK_ERR_TEMPLATE = "%s should not be blank"
+	notBlankErrTemplate = "%s should not be blank"
 )
 
 type User struct {
@@ -20,13 +20,13 @@ type User struct {
 // TODO finish
 func (u User) ValidateData() error {
 	if strings.TrimSpace(u.Username) == "" {
-		return fmt.Errorf(NOT_BLANK_ERR_TEMPLATE, "username")
+		return fmt.Errorf(notBlankErrTemplate, "username")
 	}
 	if strings.TrimSpace(u.Password) == "" {
-		return fmt.Errorf(NOT_BLANK_ERR_TEMPLATE, "password")
+		return fmt.Errorf(notBlankErrTemplate, "password")
 	}
 	if strings.TrimSpace(u.Email) == "" {
-		return fmt.Errorf(NOT_BLANK_ERR_TEMPLATE, "email")
+		return fmt.Errorf(notBlankErrTemplate, "email")
 	}
 
 	return nil

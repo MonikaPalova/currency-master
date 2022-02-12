@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-const MINUTES_TO_KEEP_CACHE = 5
+const minutesToKeepCache = 5
 
 type Cache struct {
 	assets  []Asset
@@ -17,7 +17,7 @@ func NewCache() *Cache {
 
 func (c *Cache) Fill(assets []Asset) {
 	c.assets = assets
-	c.expires = time.Now().Add(time.Minute * MINUTES_TO_KEEP_CACHE)
+	c.expires = time.Now().Add(time.Minute * minutesToKeepCache)
 }
 
 func (c Cache) GetPage(page, size int) AssetPage {

@@ -11,9 +11,9 @@ import (
 )
 
 const (
-	USERS_API_V1       = "/api/v1/users"
-	ASSETS_API_V1      = "/api/v1/assets"
-	USER_ASSETS_API_V1 = "/api/v1/users/{username}/assets"
+	usersApiV1      = "/api/v1/users"
+	assetsApiV1     = "/api/v1/assets"
+	userAssetsApiV1 = "/api/v1/users/{username}/assets"
 )
 
 type Application struct {
@@ -54,22 +54,22 @@ func (a *Application) setupHTTP() {
 
 func (a *Application) setupAssetsHandler() {
 	assetsHandler := handlers.AssetsHandler{Client: a.coinapiClient}
-	a.router.Path(ASSETS_API_V1).Methods(http.MethodGet).HandlerFunc(assetsHandler.GetAll)
-	a.router.Path(ASSETS_API_V1 + "/{id}").Methods(http.MethodGet).HandlerFunc(assetsHandler.GetById)
+	a.router.Path(assetsApiV1).Methods(http.MethodGet).HandlerFunc(assetsHandler.GetAll)
+	a.router.Path(assetsApiV1 + "/{id}").Methods(http.MethodGet).HandlerFunc(assetsHandler.GetById)
 }
 
 func (a *Application) setupUsersHandler() {
 	usersHandler := handlers.UsersHandler{DB: a.db.UsersDBHandler}
-	a.router.Path(USERS_API_V1).Methods(http.MethodGet).HandlerFunc(usersHandler.GetAll)
-	a.router.Path(USERS_API_V1 + "/{username}").Methods(http.MethodGet).HandlerFunc(usersHandler.GetByUsername)
-	a.router.Path(USERS_API_V1).Methods(http.MethodPost).HandlerFunc(usersHandler.Post)
+	a.router.Path(usersApiV1).Methods(http.MethodGet).HandlerFunc(usersHandler.GetAll)
+	a.router.Path(usersApiV1 + "/{username}").Methods(http.MethodGet).HandlerFunc(usersHandler.GetByUsername)
+	a.router.Path(usersApiV1).Methods(http.MethodPost).HandlerFunc(usersHandler.Post)
 }
 
 func (a *Application) setupUserAssetsHandler() {
 	userAssetsHandler := handlers.UserAssetsHandler{UaDB: a.db.UserAssetsDBHandler, UDB: a.db.UsersDBHandler, Client: a.coinapiClient}
 
-	a.router.Path(USER_ASSETS_API_V1).Methods(http.MethodGet).HandlerFunc(userAssetsHandler.GetAll)
-	a.router.Path(USER_ASSETS_API_V1 + "/{id}").Methods(http.MethodGet).HandlerFunc(userAssetsHandler.GetByID)
-	a.router.Path(USER_ASSETS_API_V1 + "/{id}/buy").Methods(http.MethodPost).HandlerFunc(userAssetsHandler.Buy)
-	a.router.Path(USER_ASSETS_API_V1 + "/{id}/sell").Methods(http.MethodPost).HandlerFunc(userAssetsHandler.Sell)
+	a.router.Path(userAssetsApiV1).Methods(http.MethodGet).HandlerFunc(userAssetsHandler.GetAll)
+	a.router.Path(userAssetsApiV1 + "/{id}").Methods(http.MethodGet).HandlerFunc(userAssetsHandler.GetByID)
+	a.router.Path(userAssetsApiV1 + "/{id}/buy").Methods(http.MethodPost).HandlerFunc(userAssetsHandler.Buy)
+	a.router.Path(userAssetsApiV1 + "/{id}/sell").Methods(http.MethodPost).HandlerFunc(userAssetsHandler.Sell)
 }

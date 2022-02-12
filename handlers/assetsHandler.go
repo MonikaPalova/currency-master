@@ -13,8 +13,8 @@ import (
 )
 
 const (
-	DEFAULT_PAGE = 1
-	DEFAULT_SIZE = 10
+	defaultPage = 1
+	defaultSize = 10
 )
 
 type AssetsHandler struct {
@@ -23,8 +23,8 @@ type AssetsHandler struct {
 
 func (a AssetsHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	queryParams := r.URL.Query()
-	page := getQueryParam(queryParams.Get("page"), DEFAULT_PAGE)
-	size := getQueryParam(queryParams.Get("size"), DEFAULT_SIZE)
+	page := getQueryParam(queryParams.Get("page"), defaultPage)
+	size := getQueryParam(queryParams.Get("size"), defaultSize)
 
 	if page <= 0 || size <= 0 {
 		httputils.RespondWithError(w, http.StatusBadRequest, nil, "page and size must be specified and positive numbers")

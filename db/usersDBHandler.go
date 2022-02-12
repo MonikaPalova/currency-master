@@ -9,11 +9,11 @@ import (
 )
 
 const (
-	SELECT_USER_AND_ASSETS             = "SELECT USERS.username, USERS.email, USERS.usd, USER_ASSETS.asset_id, USER_ASSETS.name, USER_ASSETS.quantity FROM USERS LEFT JOIN USER_ASSETS ON USERS.username=USER_ASSETS.username;"
-	SELECT_USER_AND_ASSETS_BY_USERNAME = "SELECT USERS.username, USERS.email, USERS.usd, USER_ASSETS.asset_id, USER_ASSETS.name, USER_ASSETS.quantity FROM USERS LEFT JOIN USER_ASSETS ON USERS.username=USER_ASSETS.username where USERS.username=?;"
-	INSERT_USER                        = "INSERT INTO USERS (username, email, password,usd) VALUES (?,?,?,?);"
-	SELECT_USER                        = "SELECT username, email, usd FROM USERS where username=?;"
-	UPDATE_USER_USD                    = "UPDATE USERS SET usd = ? WHERE username=?;"
+	selectUserAndAssets           = "SELECT USERS.username, USERS.email, USERS.usd, USER_ASSETS.asset_id, USER_ASSETS.name, USER_ASSETS.quantity FROM USERS LEFT JOIN USER_ASSETS ON USERS.username=USER_ASSETS.username;"
+	selectUserAndAssetsByUsername = "SELECT USERS.username, USERS.email, USERS.usd, USER_ASSETS.asset_id, USER_ASSETS.name, USER_ASSETS.quantity FROM USERS LEFT JOIN USER_ASSETS ON USERS.username=USER_ASSETS.username where USERS.username=?;"
+	insertUser                    = "INSERT INTO USERS (username, email, password,usd) VALUES (?,?,?,?);"
+	selectUser                    = "SELECT username, email, usd FROM USERS where username=?;"
+	updateUserUSD                 = "UPDATE USERS SET usd = ? WHERE username=?;"
 )
 
 type UsersDBHandler struct {
@@ -28,7 +28,7 @@ type userAsset struct {
 }
 
 func (u UsersDBHandler) Create(user model.User) (*model.User, error) {
-	insertStmt, err := u.conn.Prepare(INSERT_USER)
+	insertStmt, err := u.conn.Prepare(insertUser)
 	if err != nil {
 		return nil, fmt.Errorf("error when preparing insert statement for user in database, %v", err)
 	}
@@ -46,7 +46,7 @@ func (u UsersDBHandler) Create(user model.User) (*model.User, error) {
 }
 
 func (u UsersDBHandler) GetAll() ([]model.User, error) {
-	rows, err := u.conn.Query(SELECT_USER_AND_ASSETS)
+	rows, err := u.conn.Query(selectUserAndAssets)
 	if err != nil {
 		return nil, fmt.Errorf("could not retrieve users from database, %v", err)
 	}
@@ -55,7 +55,7 @@ func (u UsersDBHandler) GetAll() ([]model.User, error) {
 }
 
 func (u UsersDBHandler) GetByUsernameWithAssets(username string) (*model.User, error) {
-	rows, err := u.conn.Query(SELECT_USER_AND_ASSETS_BY_USERNAME, username)
+	rows, err := u.conn.Query(selectUserAndAssetsByUsername, username)
 	if err != nil {
 		return nil, fmt.Errorf("could not retrieve user from database, %v", err)
 	}
@@ -131,7 +131,7 @@ func (u UsersDBHandler) DeductUSD(username string, usd float64) (float64, error)
 }
 
 func (u UsersDBHandler) getByUsername(username string) (*model.User, error) {
-	row := u.conn.QueryRow(SELECT_USER, username)
+	row := u.conn.QueryRow(selectUser, username)
 
 	var user model.User
 	if err := row.Scan(&user.Username, &user.Email, &user.USD); err != nil {
@@ -142,7 +142,7 @@ func (u UsersDBHandler) getByUsername(username string) (*model.User, error) {
 }
 
 func (u UsersDBHandler) updateUSD(username string, money float64) error {
-	updateStmt, err := u.conn.Prepare(UPDATE_USER_USD)
+	updateStmt, err := u.conn.Prepare(updateUserUSD)
 	if err != nil {
 		return fmt.Errorf("error when preparing update statement for user in database, %v", err)
 	}

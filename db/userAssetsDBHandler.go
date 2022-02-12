@@ -10,11 +10,11 @@ import (
 )
 
 const (
-	SELECT_ASSETS_BY_USERNAME        = "SELECT username, asset_id, name, quantity FROM USER_ASSETS WHERE username=?;"
-	SELECT_ASSETS_BY_USERNAME_AND_ID = "SELECT username, asset_id, name, quantity FROM USER_ASSETS WHERE username=? AND asset_id=?;"
-	INSERT_ASSET                     = "INSERT INTO USER_ASSETS (username, asset_id, name, quantity) VALUES (?,?,?,?);"
-	UPDATE_ASSET                     = "UPDATE USER_ASSETS SET quantity=? WHERE username=? AND asset_id=?;"
-	DELETE_ASSET                     = "DELETE FROM USER_ASSETS WHERE username=? AND asset_id=?;"
+	selectAssetsByUsername      = "SELECT username, asset_id, name, quantity FROM USER_ASSETS WHERE username=?;"
+	selectAssetsByUsernameAndId = "SELECT username, asset_id, name, quantity FROM USER_ASSETS WHERE username=? AND asset_id=?;"
+	insertAsset                 = "INSERT INTO USER_ASSETS (username, asset_id, name, quantity) VALUES (?,?,?,?);"
+	updateAsset                 = "UPDATE USER_ASSETS SET quantity=? WHERE username=? AND asset_id=?;"
+	deleteAsset                 = "DELETE FROM USER_ASSETS WHERE username=? AND asset_id=?;"
 )
 
 type UserAssetsDBHandler struct {
@@ -22,7 +22,7 @@ type UserAssetsDBHandler struct {
 }
 
 func (u UserAssetsDBHandler) GetByUsername(username string) ([]model.UserAsset, error) {
-	rows, err := u.conn.Query(SELECT_ASSETS_BY_USERNAME, username)
+	rows, err := u.conn.Query(selectAssetsByUsername, username)
 	if err != nil {
 		return nil, fmt.Errorf("could not retrieve user assets from database, %v", err)
 	}
@@ -45,7 +45,7 @@ func deserializeUserAssets(rows *sql.Rows) ([]model.UserAsset, error) {
 }
 
 func (u UserAssetsDBHandler) GetByUsernameAndId(username, id string) (*model.UserAsset, error) {
-	row := u.conn.QueryRow(SELECT_ASSETS_BY_USERNAME_AND_ID, username, id)
+	row := u.conn.QueryRow(selectAssetsByUsernameAndId, username, id)
 
 	var asset model.UserAsset
 	if err := row.Scan(&asset.Username, &asset.AssetId, &asset.Name, &asset.Quantity); err != nil {
@@ -59,7 +59,7 @@ func (u UserAssetsDBHandler) GetByUsernameAndId(username, id string) (*model.Use
 }
 
 func (u UserAssetsDBHandler) Create(asset model.UserAsset) (*model.UserAsset, error) {
-	insertStmt, err := u.conn.Prepare(INSERT_ASSET)
+	insertStmt, err := u.conn.Prepare(insertAsset)
 	if err != nil {
 		return nil, fmt.Errorf("error when preparing insert statement for user asset in database, %v", err)
 	}
@@ -78,7 +78,7 @@ func (u UserAssetsDBHandler) Create(asset model.UserAsset) (*model.UserAsset, er
 }
 
 func (u UserAssetsDBHandler) Update(asset model.UserAsset) (*model.UserAsset, error) {
-	updateStmt, err := u.conn.Prepare(UPDATE_ASSET)
+	updateStmt, err := u.conn.Prepare(updateAsset)
 	if err != nil {
 		return nil, fmt.Errorf("error when preparing update statement for user asset in database, %v", err)
 	}
@@ -97,7 +97,7 @@ func (u UserAssetsDBHandler) Update(asset model.UserAsset) (*model.UserAsset, er
 }
 
 func (u UserAssetsDBHandler) Delete(asset model.UserAsset) error {
-	deleteStmt, err := u.conn.Prepare(DELETE_ASSET)
+	deleteStmt, err := u.conn.Prepare(deleteAsset)
 	if err != nil {
 		return fmt.Errorf("error when preparing delete statement for user asset in database, %v", err)
 	}
