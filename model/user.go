@@ -10,9 +10,10 @@ const (
 )
 
 type User struct {
-	Username string `json:"username"`
-	Password string `json:"password,omitempty"`
-	Email    string `json:"email"`
+	Username string      `json:"username"`
+	Password string      `json:"password,omitempty"`
+	Email    string      `json:"email"`
+	Assets   []UserAsset `json:"assets"`
 }
 
 // TODO finish
