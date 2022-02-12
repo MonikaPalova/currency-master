@@ -1,6 +1,6 @@
 openapi: 3.0.0
-title: "Users API"
-description: "This API includes all requests related to users"
+title: "Currency Master APIs"
+description: "This API includes all requests related to currency master"
 version: "1.0.0"
 servers:
 - url: http://localhost:7777/api/v1
@@ -10,6 +10,7 @@ tags:
 - name: "User Assets"
 - name: "Login"
 - name: "Logout"
+- name: "Assets"
 paths:
   /users:
     get:
@@ -267,7 +268,66 @@ paths:
                 example: ""
       security:
         - cookieAuth: []
-
+  /assets/{id}:
+    get:
+      tags:
+      - "Assets"
+      summary: "Get asset with id from external api"
+      parameters:
+      - name: "id"
+        in: "path"
+        description: "Id of asset to get"
+        required: true
+        schema:
+          type: "string"
+      responses:
+        "200":
+          description: "Returned asset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Asset"
+        "401":
+          description: "This request requires authentication"
+        "404":
+          description: "Asset is not found"
+      security:
+        - cookieAuth: []
+  /assets:
+    get:
+      tags:
+      - "Assets"
+      summary: "Get assets "
+      parameters:
+      - in: query
+        name: page
+        schema:
+          type: integer
+          default: 1
+        required: false
+        description: The page number
+      - in: query
+        name: size
+        schema:
+          type: integer
+          default: 10
+        required: false
+        description: The numbers of assets on page
+      responses:
+        "200":
+          description: "Returned assets"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AssetPage"
+        "401":
+          description: "This request requires authentication"
+        "400":
+          description: "Page or size are set but are not positive integers"
+      security:
+        - cookieAuth: []
 components:
   securitySchemes:
     cookieAuth:
@@ -300,6 +360,8 @@ components:
       properties:
         assetId:
           type: string
+        name:
+          type: string
         quantity:
           type: number
     UserToCreate:
@@ -311,3 +373,41 @@ components:
           type: string
         base64Password:
           type: string
+    Asset:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        isCrypto:
+          type: boolean
+        priceUSD:
+          type: number
+      example:
+        id: "BTC"
+        name: "Bitcoin"
+        isCrypto: true
+        priceUSD: 10342.23
+    AssetPage:
+      type: object
+      properties:
+        assets:
+          type: array
+          items: 
+            $ref: "#/components/schemas/Asset"
+        page:
+          type: number
+        size:
+          type: number
+        totalResults:
+          type: number
+      example:
+        assets:
+        - id: "BTC"
+          name: "Bitcoin"
+          isCrypto: true
+          priceUSD: 10342.23
+        page: 1
+        size: 1
+        totalResults: 3200
