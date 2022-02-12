@@ -127,13 +127,12 @@ paths:
         required: true
         schema:
           type: "string"
-      requestBody:
-        description: "Asset to buy"
+      - in: query
+        name: quantity
+        schema:
+          type: number
         required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/UserAsset"
+        description: The quantity to buy
       responses:
         "200":
           description: "User asset after the operation"
@@ -144,7 +143,7 @@ paths:
         "401":
           description: "This request requires authentication"
         "404":
-          description: "User is not found"
+          description: "User is not found or asset with this id doesn't exist"
         "409":
           description: "Not enough money"
       security:
@@ -167,13 +166,12 @@ paths:
         required: true
         schema:
           type: "string"
-      requestBody:
-        description: "Asset to sell"
+      - in: query
+        name: quantity
+        schema:
+          type: number
         required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/UserAsset"
+        description: The quantity to sell
       responses:
         "200":
           description: "User asset after the operation"
@@ -184,9 +182,11 @@ paths:
         "401":
           description: "This request requires authentication"
         "404":
-          description: "User is not found"
+          description: "User is not found or user doesn't have asset with this id"
         "409":
           description: "Not enough quantity to sell"
+        "410":
+          description: "User has quantity of the asset but the asset is discontinued and cannot be sold"
       security:
         - cookieAuth: []
   /users/{username}/assets:
@@ -360,6 +360,8 @@ components:
     UserAsset:
       type: object
       properties:
+        username:
+          type: string
         assetId:
           type: string
         name:

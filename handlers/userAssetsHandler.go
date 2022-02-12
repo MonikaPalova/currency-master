@@ -4,19 +4,36 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 
+	"github.com/MonikaPalova/currency-master/coinapi"
 	"github.com/MonikaPalova/currency-master/db"
 	"github.com/MonikaPalova/currency-master/httputils"
 	"github.com/gorilla/mux"
 )
 
 type UserAssetsHandler struct {
-	DB *db.UserAssetsDBHandler
+	UaDB   *db.UserAssetsDBHandler
+	UDB    *db.UsersDBHandler
+	Client *coinapi.Client
+}
+
+type userAssetOperation struct {
+	username string
+	assetId  string
+	quantity float64
+}
+
+type userAssetOperationResponse struct {
+	Username string  `json:"username"`
+	AssetId  string  `json:"assetId"`
+	Balance  float64 `json:"balance"`
+	Quantity float64 `json:"quantity"`
 }
 
 func (u UserAssetsHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	username := mux.Vars(r)["username"]
-	assets, err := u.DB.GetByUsername(username)
+	assets, err := u.UaDB.GetByUsername(username)
 	if err != nil {
 		httputils.RespondWithError(w, http.StatusInternalServerError, err, fmt.Sprintf("could not get user assets for username=%s", username))
 		return
@@ -33,7 +50,7 @@ func (u UserAssetsHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 func (u UserAssetsHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	username := mux.Vars(r)["username"]
 	id := mux.Vars(r)["id"]
-	asset, err := u.DB.GetByUsernameAndId(username, id)
+	asset, err := u.UaDB.GetByUsernameAndId(username, id)
 	if err != nil {
 		httputils.RespondWithError(w, http.StatusInternalServerError, err, fmt.Sprintf("could not retrieve user asset with username %s and id %s from database", username, id))
 		return
@@ -52,9 +69,88 @@ func (u UserAssetsHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u UserAssetsHandler) Buy(w http.ResponseWriter, r *http.Request) {
+	// operation, err := getOperation(r)
+	// if err != nil {
+	// 	httputils.RespondWithError(w, http.StatusBadRequest, err, "buy operation parameters are invalid")
+	// 	return
+	// }
 	//TODO
 }
 
 func (u UserAssetsHandler) Sell(w http.ResponseWriter, r *http.Request) {
-	//TODO
+	operation, err := getOperation(r)
+	if err != nil {
+		httputils.RespondWithError(w, http.StatusBadRequest, err, "sell operation parameters are invalid")
+		return
+	}
+
+	userAsset, err := u.UaDB.GetByUsernameAndId(operation.username, operation.assetId)
+	if err != nil {
+		httputils.RespondWithError(w, http.StatusInternalServerError, err, fmt.Sprintf("could not retrieve user asset with username %s and id %s from database", operation.username, operation.assetId))
+		return
+	}
+	if userAsset == nil {
+		httputils.RespondWithError(w, http.StatusNotFound, nil, fmt.Sprintf("user with username %s doesn't have asset with id %s", operation.username, operation.assetId))
+		return
+	}
+
+	if operation.quantity > userAsset.Quantity {
+		httputils.RespondWithError(w, http.StatusConflict, nil, fmt.Sprintf("user with username %s doesn't have enough quantity of asset with id %s to sell", operation.username, operation.assetId))
+		return
+	}
+
+	asset, err := u.Client.GetAssetById(operation.assetId)
+	if err != nil {
+		httputils.RespondWithError(w, http.StatusInternalServerError, err, fmt.Sprintf("Could not retrieve asset with id %s from external api", operation.assetId))
+		return
+	}
+	if asset == nil {
+		httputils.RespondWithError(w, http.StatusNotFound, nil, fmt.Sprintf("Asset with id %s doesn't exist", operation.assetId))
+		return
+	}
+
+	userAsset.Quantity -= operation.quantity
+	if userAsset.Quantity == 0 {
+		if err := u.UaDB.Delete(*userAsset); err != nil {
+			httputils.RespondWithError(w, http.StatusInternalServerError, err, "Could not delete asset from database")
+			return
+		}
+	} else {
+		userAsset, err = u.UaDB.Update(*userAsset)
+		if err != nil {
+			httputils.RespondWithError(w, http.StatusInternalServerError, err, "Could not update asset in database")
+			return
+		}
+	}
+
+	earned := operation.quantity * asset.PriceUSD
+	balance, err := u.UDB.AddUSD(operation.username, earned)
+	if err != nil {
+		httputils.RespondWithError(w, http.StatusInternalServerError, err, "Could not update user in database")
+		return
+	}
+
+	operationResponse := userAssetOperationResponse{Username: operation.username, AssetId: operation.assetId, Quantity: userAsset.Quantity, Balance: balance}
+	jsonResponse, err := json.Marshal(operationResponse)
+	if err != nil {
+		httputils.RespondWithError(w, http.StatusInternalServerError, err, "Could not convert sell operation response to JSON")
+		return
+	}
+	httputils.RespondOK(w, jsonResponse)
+}
+
+func getOperation(r *http.Request) (*userAssetOperation, error) {
+	username := mux.Vars(r)["username"]
+	id := mux.Vars(r)["id"]
+
+	quantityStr := r.URL.Query().Get("quantity")
+	if quantityStr == "" {
+		return nil, fmt.Errorf("quantity query parameter is required")
+	}
+	quantity, err := strconv.ParseFloat(quantityStr, 64)
+	if err != nil || quantity <= 0 {
+		return nil, fmt.Errorf("quantity query parameter must be a positive number")
+	}
+
+	return &userAssetOperation{username: username, assetId: id, quantity: quantity}, nil
 }

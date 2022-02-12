@@ -66,7 +66,7 @@ func (u UsersHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 
 func (u UsersHandler) GetByUsername(w http.ResponseWriter, r *http.Request) {
 	username := mux.Vars(r)["username"]
-	user, err := u.DB.GetByUsername(username)
+	user, err := u.DB.GetByUsernameWithAssets(username)
 	if err != nil {
 		httputils.RespondWithError(w, http.StatusInternalServerError, err, fmt.Sprintf("could not retrieve user with username %s from database", username))
 		return

@@ -18,11 +18,7 @@ const (
 )
 
 type AssetsHandler struct {
-	client *coinapi.Client
-}
-
-func NewAssetsHandler() *AssetsHandler {
-	return &AssetsHandler{coinapi.NewClient()}
+	Client *coinapi.Client
 }
 
 func (a AssetsHandler) GetAll(w http.ResponseWriter, r *http.Request) {
@@ -35,7 +31,7 @@ func (a AssetsHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	assetsPage, err := a.client.GetAssetPage(page, size)
+	assetsPage, err := a.Client.GetAssetPage(page, size)
 	if err != nil {
 		httputils.RespondWithError(w, http.StatusInternalServerError, err, "Could not retrieve assets from external api")
 		return
@@ -60,13 +56,13 @@ func getQueryParam(actual string, defaultValue int) int {
 
 func (a AssetsHandler) GetById(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
-	asset, err := a.client.GetAssetById(id)
+	asset, err := a.Client.GetAssetById(id)
 	if err != nil {
 		httputils.RespondWithError(w, http.StatusInternalServerError, err, fmt.Sprintf("Could not retrieve asset with id %s from external api", id))
 		return
 	}
 	if asset == nil {
-		httputils.RespondWithError(w, http.StatusNotFound, nil, fmt.Sprintf("Could not retrieve asset with id %s from external api", id))
+		httputils.RespondWithError(w, http.StatusNotFound, nil, fmt.Sprintf("Asset with id %s doesn't exist", id))
 		return
 	}
 

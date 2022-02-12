@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/MonikaPalova/currency-master/coinapi"
 	. "github.com/MonikaPalova/currency-master/db"
 	"github.com/MonikaPalova/currency-master/handlers"
 	"github.com/gorilla/mux"
@@ -16,13 +17,15 @@ const (
 )
 
 type Application struct {
-	db     *Database
-	router *mux.Router
+	db            *Database
+	coinapiClient *coinapi.Client
+	router        *mux.Router
 }
 
 func New() Application {
 	var a Application
 	a.initDB()
+	a.coinapiClient = coinapi.NewClient()
 	a.setupHTTP()
 	// setup app
 	return a
@@ -50,7 +53,7 @@ func (a *Application) setupHTTP() {
 }
 
 func (a *Application) setupAssetsHandler() {
-	assetsHandler := handlers.NewAssetsHandler()
+	assetsHandler := handlers.AssetsHandler{Client: a.coinapiClient}
 	a.router.Path(ASSETS_API_V1).Methods(http.MethodGet).HandlerFunc(assetsHandler.GetAll)
 	a.router.Path(ASSETS_API_V1 + "/{id}").Methods(http.MethodGet).HandlerFunc(assetsHandler.GetById)
 }
@@ -63,7 +66,7 @@ func (a *Application) setupUsersHandler() {
 }
 
 func (a *Application) setupUserAssetsHandler() {
-	userAssetsHandler := handlers.UserAssetsHandler{DB: a.db.UserAssetsDBHandler}
+	userAssetsHandler := handlers.UserAssetsHandler{UaDB: a.db.UserAssetsDBHandler, UDB: a.db.UsersDBHandler, Client: a.coinapiClient}
 
 	a.router.Path(USER_ASSETS_API_V1).Methods(http.MethodGet).HandlerFunc(userAssetsHandler.GetAll)
 	a.router.Path(USER_ASSETS_API_V1 + "/{id}").Methods(http.MethodGet).HandlerFunc(userAssetsHandler.GetByID)

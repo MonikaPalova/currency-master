@@ -10,10 +10,10 @@ import (
 )
 
 const (
-	SELECT_ASSETS_BY_USERNAME        = "SELECT asset_id, name, quantity FROM USER_ASSETS WHERE username=?;"
-	SELECT_ASSETS_BY_USERNAME_AND_ID = "SELECT asset_id, name, quantity FROM USER_ASSETS WHERE username=? AND asset_id=?;"
+	SELECT_ASSETS_BY_USERNAME        = "SELECT username, asset_id, name, quantity FROM USER_ASSETS WHERE username=?;"
+	SELECT_ASSETS_BY_USERNAME_AND_ID = "SELECT username, asset_id, name, quantity FROM USER_ASSETS WHERE username=? AND asset_id=?;"
 	INSERT_ASSET                     = "INSERT INTO USER_ASSETS (username, asset_id, name, quantity) VALUES (?,?,?,?);"
-	UPDATE_ASSET                     = "UPDATE USER_ASSETS SET quantity = '?' WHERE username=? AND asset_id=?;"
+	UPDATE_ASSET                     = "UPDATE USER_ASSETS SET quantity=? WHERE username=? AND asset_id=?;"
 	DELETE_ASSET                     = "DELETE FROM USER_ASSETS WHERE username=? AND asset_id=?;"
 )
 
@@ -34,7 +34,7 @@ func deserializeUserAssets(rows *sql.Rows) ([]model.UserAsset, error) {
 	assets := []model.UserAsset{}
 	for rows.Next() {
 		var asset model.UserAsset
-		if err := rows.Scan(&asset.AssetId, &asset.Name, &asset.Quantity); err != nil {
+		if err := rows.Scan(&asset.Username, &asset.AssetId, &asset.Name, &asset.Quantity); err != nil {
 			return nil, fmt.Errorf("could not read user asset row, %v", err)
 		}
 
@@ -48,7 +48,7 @@ func (u UserAssetsDBHandler) GetByUsernameAndId(username, id string) (*model.Use
 	row := u.conn.QueryRow(SELECT_ASSETS_BY_USERNAME_AND_ID, username, id)
 
 	var asset model.UserAsset
-	if err := row.Scan(&asset.AssetId, &asset.Name, &asset.Quantity); err != nil {
+	if err := row.Scan(&asset.Username, &asset.AssetId, &asset.Name, &asset.Quantity); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
 		}

@@ -12,6 +12,8 @@ const (
 	SELECT_USER_AND_ASSETS             = "SELECT USERS.username, USERS.email, USERS.usd, USER_ASSETS.asset_id, USER_ASSETS.name, USER_ASSETS.quantity FROM USERS LEFT JOIN USER_ASSETS ON USERS.username=USER_ASSETS.username;"
 	SELECT_USER_AND_ASSETS_BY_USERNAME = "SELECT USERS.username, USERS.email, USERS.usd, USER_ASSETS.asset_id, USER_ASSETS.name, USER_ASSETS.quantity FROM USERS LEFT JOIN USER_ASSETS ON USERS.username=USER_ASSETS.username where USERS.username=?;"
 	INSERT_USER                        = "INSERT INTO USERS (username, email, password,usd) VALUES (?,?,?,?);"
+	SELECT_USER                        = "SELECT username, email, usd FROM USERS where username=?;"
+	UPDATE_USER_USD                    = "UPDATE USERS SET usd = ? WHERE username=?;"
 )
 
 type UsersDBHandler struct {
@@ -52,7 +54,7 @@ func (u UsersDBHandler) GetAll() ([]model.User, error) {
 	return deserializeUsers(rows)
 }
 
-func (u UsersDBHandler) GetByUsername(username string) (*model.User, error) {
+func (u UsersDBHandler) GetByUsernameWithAssets(username string) (*model.User, error) {
 	rows, err := u.conn.Query(SELECT_USER_AND_ASSETS_BY_USERNAME, username)
 	if err != nil {
 		return nil, fmt.Errorf("could not retrieve user from database, %v", err)
@@ -96,4 +98,63 @@ func deserializeUsers(rows *sql.Rows) ([]model.User, error) {
 	}
 
 	return users, nil
+}
+
+func (u UsersDBHandler) AddUSD(username string, usd float64) (float64, error) {
+	user, err := u.getByUsername(username)
+	if err != nil {
+		return -1, err
+	}
+
+	money := user.USD + usd
+
+	if err := u.updateUSD(user.Username, money); err != nil {
+		return -1, err
+	}
+
+	return money, nil
+}
+
+func (u UsersDBHandler) DeductUSD(username string, usd float64) (float64, error) {
+	user, err := u.getByUsername(username)
+	if err != nil {
+		return -1, err
+	}
+
+	money := user.USD - usd
+
+	if err := u.updateUSD(user.Username, money); err != nil {
+		return -1, err
+	}
+
+	return money, nil
+}
+
+func (u UsersDBHandler) getByUsername(username string) (*model.User, error) {
+	row := u.conn.QueryRow(SELECT_USER, username)
+
+	var user model.User
+	if err := row.Scan(&user.Username, &user.Email, &user.USD); err != nil {
+		return nil, fmt.Errorf("could not read user row, %v", err)
+	}
+
+	return &user, nil
+}
+
+func (u UsersDBHandler) updateUSD(username string, money float64) error {
+	updateStmt, err := u.conn.Prepare(UPDATE_USER_USD)
+	if err != nil {
+		return fmt.Errorf("error when preparing update statement for user in database, %v", err)
+	}
+	defer updateStmt.Close()
+
+	res, err := updateStmt.Exec(money, username)
+	if err != nil {
+		return fmt.Errorf("error when updating user money in database, %v", err)
+	}
+	cnt, _ := res.RowsAffected()
+	if cnt == 0 {
+		return fmt.Errorf("could not update the money of user username=%s, usd=%f", username, money)
+	}
+	return nil
 }
