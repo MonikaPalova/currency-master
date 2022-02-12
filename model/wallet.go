@@ -4,10 +4,10 @@ import "time"
 
 // To get assets for user you get this class from db
 type UserAsset struct {
-	Username string `json:"username,omitempty"`
-	AssetId  string `json:"assetId"`
-	Name     string `json:"name"`
-	Quantity uint8  `json:"quantity"`
+	Username string  `json:"username,omitempty"`
+	AssetId  string  `json:"assetId"`
+	Name     string  `json:"name"`
+	Quantity float64 `json:"quantity"`
 }
 
 type Acquisition struct {

@@ -90,7 +90,7 @@ func (u UserAssetsDBHandler) Update(asset model.UserAsset) (*model.UserAsset, er
 	}
 	cnt, _ := res.RowsAffected()
 	if cnt == 0 {
-		return nil, fmt.Errorf("could not update the quantity of user asset username=%s, assetId=%s, quantity=%d", asset.Username, asset.AssetId, asset.Quantity)
+		return nil, fmt.Errorf("could not update the quantity of user asset username=%s, assetId=%s, quantity=%f", asset.Username, asset.AssetId, asset.Quantity)
 	}
 
 	return &asset, nil
