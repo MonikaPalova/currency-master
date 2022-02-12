@@ -5,7 +5,8 @@ USE `currency-master`;
 CREATE TABLE IF NOT EXISTS `USERS` (
     `username` VARCHAR(36) NOT NULL PRIMARY KEY,
     `password` VARCHAR(36) NOT NULL,
-    `email` VARCHAR(64) NOT NULL
+    `email` VARCHAR(64) NOT NULL,
+    `usd` FLOAT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS `USER_ASSETS` (

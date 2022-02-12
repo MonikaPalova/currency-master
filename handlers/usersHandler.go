@@ -11,6 +11,8 @@ import (
 	"github.com/gorilla/mux"
 )
 
+const START_USER_USD = 100
+
 type UsersHandler struct {
 	DB *db.UsersDBHandler
 }
@@ -27,6 +29,7 @@ func (u UsersHandler) Post(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	user.USD = START_USER_USD
 	createdUser, err := u.DB.Create(user)
 	if err != nil {
 		httputils.RespondWithError(w, http.StatusInternalServerError, err, "could not create user in database")

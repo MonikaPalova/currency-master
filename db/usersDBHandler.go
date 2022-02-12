@@ -9,9 +9,9 @@ import (
 )
 
 const (
-	SELECT_USER_AND_ASSETS             = "SELECT USERS.username, USERS.email, USER_ASSETS.asset_id, USER_ASSETS.name, USER_ASSETS.quantity FROM USERS LEFT JOIN USER_ASSETS ON USERS.username=USER_ASSETS.username;"
-	SELECT_USER_AND_ASSETS_BY_USERNAME = "SELECT USERS.username, USERS.email, USER_ASSETS.asset_id, USER_ASSETS.name, USER_ASSETS.quantity FROM USERS LEFT JOIN USER_ASSETS ON USERS.username=USER_ASSETS.username where USERS.username=?;"
-	INSERT_USER                        = "INSERT INTO USERS (username, email, password) VALUES (?,?,?);"
+	SELECT_USER_AND_ASSETS             = "SELECT USERS.username, USERS.email, USERS.usd, USER_ASSETS.asset_id, USER_ASSETS.name, USER_ASSETS.quantity FROM USERS LEFT JOIN USER_ASSETS ON USERS.username=USER_ASSETS.username;"
+	SELECT_USER_AND_ASSETS_BY_USERNAME = "SELECT USERS.username, USERS.email, USERS.usd, USER_ASSETS.asset_id, USER_ASSETS.name, USER_ASSETS.quantity FROM USERS LEFT JOIN USER_ASSETS ON USERS.username=USER_ASSETS.username where USERS.username=?;"
+	INSERT_USER                        = "INSERT INTO USERS (username, email, password,usd) VALUES (?,?,?,?);"
 )
 
 type UsersDBHandler struct {
@@ -32,7 +32,7 @@ func (u UsersDBHandler) Create(user model.User) (*model.User, error) {
 	}
 	defer insertStmt.Close()
 
-	if _, err = insertStmt.Exec(user.Username, user.Email, user.Password); err != nil {
+	if _, err = insertStmt.Exec(user.Username, user.Email, user.Password, user.USD); err != nil {
 		if err.(*mysql.MySQLError).Number == 1062 {
 			return nil, nil
 		}
@@ -73,7 +73,7 @@ func deserializeUsers(rows *sql.Rows) ([]model.User, error) {
 
 	for rows.Next() {
 		var asset userAsset
-		if err := rows.Scan(&asset.user.Username, &asset.user.Email, &asset.assetId, &asset.name, &asset.quantity); err != nil {
+		if err := rows.Scan(&asset.user.Username, &asset.user.Email, &asset.user.USD, &asset.assetId, &asset.name, &asset.quantity); err != nil {
 			return nil, fmt.Errorf("could not read user row, %v", err)
 		}
 		if user, exists := usersByUsername[asset.user.Username]; exists {
