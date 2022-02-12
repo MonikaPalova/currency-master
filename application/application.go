@@ -63,7 +63,7 @@ func (a *Application) setupUsersHandler() {
 }
 
 func (a *Application) setupUserAssetsHandler() {
-	userAssetsHandler := handlers.UserAssetsHanlder(a.db.UserAssetsDBHandler)
+	userAssetsHandler := handlers.UserAssetsHandler{DB: a.db.UserAssetsDBHandler}
 
 	a.router.Path(USER_ASSETS_API_V1).Methods(http.MethodGet).HandlerFunc(userAssetsHandler.GetAll)
 	a.router.Path(USER_ASSETS_API_V1 + "/{id}").Methods(http.MethodGet).HandlerFunc(userAssetsHandler.GetByID)
