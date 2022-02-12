@@ -12,6 +12,13 @@ type Asset struct {
 	PriceUSD float64 `json:"priceUSD"`
 }
 
+type AssetPage struct {
+	Assets []Asset `json:"assets"`
+	Page   int     `json:"page"`
+	Size   int     `json:"size"`
+	Total  int     `json:"totalResults"`
+}
+
 func (a *Asset) UnmarshalJSON(bytes []byte) (err error) {
 	var asset struct {
 		ID       string  `json:"asset_id"`

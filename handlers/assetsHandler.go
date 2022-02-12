@@ -4,11 +4,17 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 
 	"github.com/MonikaPalova/currency-master/coinapi"
 	"github.com/MonikaPalova/currency-master/httputils"
+)
+
+const (
+	DEFAULT_PAGE = 1
+	DEFAULT_SIZE = 10
 )
 
 type AssetsHandler struct {
@@ -20,18 +26,35 @@ func NewAssetsHandler() *AssetsHandler {
 }
 
 func (a AssetsHandler) GetAll(w http.ResponseWriter, r *http.Request) {
-	assets, err := a.client.GetAssets()
+	queryParams := r.URL.Query()
+	page := getQueryParam(queryParams.Get("page"), DEFAULT_PAGE)
+	size := getQueryParam(queryParams.Get("size"), DEFAULT_SIZE)
+
+	if page <= 0 || size <= 0 {
+		httputils.RespondWithError(w, http.StatusBadRequest, nil, "page and size must be specified and positive numbers")
+	}
+
+	assetsPage, err := a.client.GetAssetPage(page, size)
 	if err != nil {
 		httputils.RespondWithError(w, http.StatusInternalServerError, err, "Could not retrieve assets from external api")
 		return
 	}
 
-	jsonResponse, err := json.Marshal(assets)
+	jsonResponse, err := json.Marshal(assetsPage)
 	if err != nil {
-		httputils.RespondWithError(w, http.StatusInternalServerError, err, "Couldn not convert assets to JSON")
+		httputils.RespondWithError(w, http.StatusInternalServerError, err, "Could not convert assets to JSON")
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Write(jsonResponse)
+}
+
+func getQueryParam(actual string, defaultValue int) int {
+	if actual == "" {
+		return defaultValue
+	} else {
+		res, _ := strconv.Atoi(actual)
+		return res
+	}
 }
 
 func (a AssetsHandler) GetById(w http.ResponseWriter, r *http.Request) {
