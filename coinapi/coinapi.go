@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strconv"
 
 	"github.com/MonikaPalova/currency-master/config"
 )
@@ -13,13 +12,19 @@ import (
 type Client struct {
 	httpClient *http.Client
 	config     *config.CoinAPI
+	cache      *Cache
 }
 
 func NewClient() *Client {
-	return &Client{&http.Client{}, config.NewCoinAPI()}
+	return &Client{&http.Client{}, config.NewCoinAPI(), NewCache()}
 }
 
-func (c Client) GetAssets() ([]Asset, error) {
+func (c Client) GetAssetPage(page, size int) (*AssetPage, error) {
+	if assetsPage := c.cache.GetPage(page, size); len(assetsPage.Assets) > 0 {
+		fmt.Println("GOT DATA FROM CACHE")
+		return &assetsPage, nil
+	}
+
 	request, err := c.setUpRequest(http.MethodGet, c.config.AssetsUrl, nil)
 	if err != nil {
 		return nil, fmt.Errorf("could not set up get assets request, %v", err.Error())
@@ -41,7 +46,9 @@ func (c Client) GetAssets() ([]Asset, error) {
 	}
 
 	assets = removeInvalidAssets(assets)
-	return assets, nil
+	c.cache.Fill(assets)
+	assetsPage := c.cache.GetPage(page, size)
+	return &assetsPage, nil
 }
 
 func removeInvalidAssets(assets []Asset) []Asset {
@@ -92,7 +99,7 @@ func validateResponseCode(response *http.Response) error {
 			return fmt.Errorf("could not parse JSON response with error, %v", err.Error())
 		}
 
-		return fmt.Errorf("coin API returned code %s with messsage %s", strconv.Itoa(response.StatusCode), responseBody.Error)
+		return fmt.Errorf("coin API returned code %d with messsage %s", response.StatusCode, responseBody.Error)
 	}
 	return nil
 }
