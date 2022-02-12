@@ -101,7 +101,7 @@ func deserializeUsers(rows *sql.Rows) ([]model.User, error) {
 }
 
 func (u UsersDBHandler) AddUSD(username string, usd float64) (float64, error) {
-	user, err := u.getByUsername(username)
+	user, err := u.GetByUsername(username)
 	if err != nil {
 		return -1, err
 	}
@@ -116,7 +116,7 @@ func (u UsersDBHandler) AddUSD(username string, usd float64) (float64, error) {
 }
 
 func (u UsersDBHandler) DeductUSD(username string, usd float64) (float64, error) {
-	user, err := u.getByUsername(username)
+	user, err := u.GetByUsername(username)
 	if err != nil {
 		return -1, err
 	}
@@ -130,7 +130,7 @@ func (u UsersDBHandler) DeductUSD(username string, usd float64) (float64, error)
 	return money, nil
 }
 
-func (u UsersDBHandler) getByUsername(username string) (*model.User, error) {
+func (u UsersDBHandler) GetByUsername(username string) (*model.User, error) {
 	row := u.conn.QueryRow(selectUser, username)
 
 	var user model.User

@@ -16,8 +16,9 @@ const (
 type Database struct {
 	conn *sql.DB
 
-	UsersDBHandler      *UsersDBHandler
-	UserAssetsDBHandler *UserAssetsDBHandler
+	UsersDBHandler        *UsersDBHandler
+	UserAssetsDBHandler   *UserAssetsDBHandler
+	AcquisitionsDBHandler *AcquisitionsDBHandler
 }
 
 func NewDB() (*Database, error) {
@@ -37,5 +38,5 @@ func NewDB() (*Database, error) {
 		return nil, fmt.Errorf("request to create tables in db failed, %v", err)
 	}
 
-	return &Database{conn: conn, UsersDBHandler: &UsersDBHandler{conn: conn}, UserAssetsDBHandler: &UserAssetsDBHandler{conn}}, nil
+	return &Database{conn: conn, UsersDBHandler: &UsersDBHandler{conn: conn}, UserAssetsDBHandler: &UserAssetsDBHandler{conn}, AcquisitionsDBHandler: &AcquisitionsDBHandler{conn}}, nil
 }

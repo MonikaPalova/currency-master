@@ -15,6 +15,7 @@ import (
 type UserAssetsHandler struct {
 	UaDB   *db.UserAssetsDBHandler
 	UDB    *db.UsersDBHandler
+	ADB    *db.AcquisitionsDBHandler
 	Client *coinapi.Client
 }
 
@@ -69,12 +70,40 @@ func (u UserAssetsHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u UserAssetsHandler) Buy(w http.ResponseWriter, r *http.Request) {
-	// operation, err := getOperation(r)
-	// if err != nil {
-	// 	httputils.RespondWithError(w, http.StatusBadRequest, err, "buy operation parameters are invalid")
-	// 	return
-	// }
+	operation, err := getOperation(r)
+	if err != nil {
+		httputils.RespondWithError(w, http.StatusBadRequest, err, "buy operation parameters are invalid")
+		return
+	}
+
+	asset, err := u.Client.GetAssetById(operation.assetId)
+	if err != nil {
+		httputils.RespondWithError(w, http.StatusInternalServerError, err, fmt.Sprintf("Could not retrieve asset with id %s from external api", operation.assetId))
+		return
+	}
+	if asset == nil {
+		httputils.RespondWithError(w, http.StatusNotFound, nil, fmt.Sprintf("Asset with id %s doesn't exist", operation.assetId))
+		return
+	}
+
+	user, err := u.UDB.GetByUsername(operation.username)
+	if err != nil {
+		httputils.RespondWithError(w, http.StatusInternalServerError, err, fmt.Sprintf("Could not retrieve user with username %s from database", operation.username))
+		return
+	}
+
+	price := operation.quantity * asset.PriceUSD
+	if price > user.USD {
+		httputils.RespondWithError(w, http.StatusConflict, nil, fmt.Sprintf("user with username %s doesn't have enough money to buy asset %s, needed: %f", operation.username, operation.assetId, price))
+		return
+	}
+
 	//TODO
+	//change user asset quantity
+	// change user usd
+	//create acquisition
+
+	// maybe return acquisition
 }
 
 func (u UserAssetsHandler) Sell(w http.ResponseWriter, r *http.Request) {

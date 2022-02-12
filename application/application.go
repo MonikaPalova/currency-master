@@ -11,9 +11,10 @@ import (
 )
 
 const (
-	usersApiV1      = "/api/v1/users"
-	assetsApiV1     = "/api/v1/assets"
-	userAssetsApiV1 = "/api/v1/users/{username}/assets"
+	usersApiV1        = "/api/v1/users"
+	assetsApiV1       = "/api/v1/assets"
+	userAssetsApiV1   = "/api/v1/users/{username}/assets"
+	acquisitionsApiV1 = "/api/v1/acquisitions"
 )
 
 type Application struct {
@@ -46,10 +47,10 @@ func (a Application) Start() error {
 
 func (a *Application) setupHTTP() {
 	a.router = mux.NewRouter()
-
 	a.setupAssetsHandler()
 	a.setupUsersHandler()
 	a.setupUserAssetsHandler()
+	a.setupAcquisitionsHandler()
 }
 
 func (a *Application) setupAssetsHandler() {
@@ -67,9 +68,13 @@ func (a *Application) setupUsersHandler() {
 
 func (a *Application) setupUserAssetsHandler() {
 	userAssetsHandler := handlers.UserAssetsHandler{UaDB: a.db.UserAssetsDBHandler, UDB: a.db.UsersDBHandler, Client: a.coinapiClient}
-
 	a.router.Path(userAssetsApiV1).Methods(http.MethodGet).HandlerFunc(userAssetsHandler.GetAll)
 	a.router.Path(userAssetsApiV1 + "/{id}").Methods(http.MethodGet).HandlerFunc(userAssetsHandler.GetByID)
 	a.router.Path(userAssetsApiV1 + "/{id}/buy").Methods(http.MethodPost).HandlerFunc(userAssetsHandler.Buy)
 	a.router.Path(userAssetsApiV1 + "/{id}/sell").Methods(http.MethodPost).HandlerFunc(userAssetsHandler.Sell)
+}
+
+func (a *Application) setupAcquisitionsHandler() {
+	acquisitionsHandler := handlers.AcquisitionsHandler{DB: a.db.AcquisitionsDBHandler}
+	a.router.Path(acquisitionsApiV1).Methods(http.MethodGet).HandlerFunc(acquisitionsHandler.GetAll)
 }
