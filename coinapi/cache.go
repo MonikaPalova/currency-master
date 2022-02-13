@@ -6,21 +6,25 @@ import (
 
 const minutesToKeepCache = 5
 
-type Cache struct {
+type cache struct {
 	assets  []Asset
+	ids     map[string]*Asset
 	expires time.Time
 }
 
-func NewCache() *Cache {
-	return &Cache{[]Asset{}, time.Now()}
+func newCache() *cache {
+	return &cache{assets: []Asset{}, ids: make(map[string]*Asset), expires: time.Now()}
 }
 
-func (c *Cache) Fill(assets []Asset) {
+func (c *cache) fill(assets []Asset) {
 	c.assets = assets
+	for _, asset := range assets {
+		c.ids[asset.ID] = &asset
+	}
 	c.expires = time.Now().Add(time.Minute * minutesToKeepCache)
 }
 
-func (c Cache) GetPage(page, size int) AssetPage {
+func (c cache) getPage(page, size int) AssetPage {
 	if c.isExpired() {
 		c.cleanCache()
 		return AssetPage{[]Asset{}, page, size, 0}
@@ -38,10 +42,19 @@ func (c Cache) GetPage(page, size int) AssetPage {
 	return AssetPage{c.assets[from:to], page, size, total}
 }
 
-func (c Cache) isExpired() bool {
+func (c cache) getAsset(id string) *Asset {
+	if c.isExpired() {
+		c.cleanCache()
+		return nil
+	}
+
+	return c.ids[id]
+}
+
+func (c cache) isExpired() bool {
 	return c.expires.Before(time.Now())
 }
 
-func (c *Cache) cleanCache() {
+func (c *cache) cleanCache() {
 	c.assets = []Asset{}
 }

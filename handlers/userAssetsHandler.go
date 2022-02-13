@@ -13,10 +13,10 @@ import (
 )
 
 type UserAssetsHandler struct {
-	UaDB   *db.UserAssetsDBHandler
-	UDB    *db.UsersDBHandler
-	ADB    *db.AcquisitionsDBHandler
-	Client *coinapi.Client
+	UaDB *db.UserAssetsDBHandler
+	UDB  *db.UsersDBHandler
+	ADB  *db.AcquisitionsDBHandler
+	Svc  *coinapi.AssetService
 }
 
 type userAssetOperation struct {
@@ -76,7 +76,7 @@ func (u UserAssetsHandler) Buy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	asset, err := u.Client.GetAssetById(operation.assetId)
+	asset, err := u.Svc.GetAssetById(operation.assetId)
 	if err != nil {
 		httputils.RespondWithError(w, http.StatusInternalServerError, err, fmt.Sprintf("Could not retrieve asset with id %s from external api", operation.assetId))
 		return
@@ -128,7 +128,7 @@ func (u UserAssetsHandler) Sell(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	asset, err := u.Client.GetAssetById(operation.assetId)
+	asset, err := u.Svc.GetAssetById(operation.assetId)
 	if err != nil {
 		httputils.RespondWithError(w, http.StatusInternalServerError, err, fmt.Sprintf("Could not retrieve asset with id %s from external api", operation.assetId))
 		return

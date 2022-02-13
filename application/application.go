@@ -18,15 +18,15 @@ const (
 )
 
 type Application struct {
-	db            *Database
-	coinapiClient *coinapi.Client
-	router        *mux.Router
+	db     *Database
+	router *mux.Router
+	svc    *coinapi.AssetService
 }
 
 func New() Application {
 	var a Application
 	a.initDB()
-	a.coinapiClient = coinapi.NewClient()
+	a.svc = coinapi.NewAssetService()
 	a.setupHTTP()
 	// setup app
 	return a
@@ -54,7 +54,7 @@ func (a *Application) setupHTTP() {
 }
 
 func (a *Application) setupAssetsHandler() {
-	assetsHandler := handlers.AssetsHandler{Client: a.coinapiClient}
+	assetsHandler := handlers.AssetsHandler{Svc: a.svc}
 	a.router.Path(assetsApiV1).Methods(http.MethodGet).HandlerFunc(assetsHandler.GetAll)
 	a.router.Path(assetsApiV1 + "/{id}").Methods(http.MethodGet).HandlerFunc(assetsHandler.GetById)
 }
@@ -67,7 +67,7 @@ func (a *Application) setupUsersHandler() {
 }
 
 func (a *Application) setupUserAssetsHandler() {
-	userAssetsHandler := handlers.UserAssetsHandler{UaDB: a.db.UserAssetsDBHandler, UDB: a.db.UsersDBHandler, Client: a.coinapiClient}
+	userAssetsHandler := handlers.UserAssetsHandler{UaDB: a.db.UserAssetsDBHandler, UDB: a.db.UsersDBHandler, Svc: a.svc}
 	a.router.Path(userAssetsApiV1).Methods(http.MethodGet).HandlerFunc(userAssetsHandler.GetAll)
 	a.router.Path(userAssetsApiV1 + "/{id}").Methods(http.MethodGet).HandlerFunc(userAssetsHandler.GetByID)
 	a.router.Path(userAssetsApiV1 + "/{id}/buy").Methods(http.MethodPost).HandlerFunc(userAssetsHandler.Buy)

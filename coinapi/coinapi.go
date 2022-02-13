@@ -9,22 +9,16 @@ import (
 	"github.com/MonikaPalova/currency-master/config"
 )
 
-type Client struct {
+type client struct {
 	httpClient *http.Client
 	config     *config.CoinAPI
-	cache      *Cache
 }
 
-func NewClient() *Client {
-	return &Client{&http.Client{}, config.NewCoinAPI(), NewCache()}
+func newClient() *client {
+	return &client{&http.Client{}, config.NewCoinAPI()}
 }
 
-func (c Client) GetAssetPage(page, size int) (*AssetPage, error) {
-	if assetsPage := c.cache.GetPage(page, size); len(assetsPage.Assets) > 0 {
-		fmt.Println("GOT DATA FROM CACHE")
-		return &assetsPage, nil
-	}
-
+func (c client) getAssets() ([]Asset, error) {
 	request, err := c.setUpRequest(http.MethodGet, c.config.AssetsUrl, nil)
 	if err != nil {
 		return nil, fmt.Errorf("could not set up get assets request, %v", err.Error())
@@ -46,9 +40,7 @@ func (c Client) GetAssetPage(page, size int) (*AssetPage, error) {
 	}
 
 	assets = removeInvalidAssets(assets)
-	c.cache.Fill(assets)
-	assetsPage := c.cache.GetPage(page, size)
-	return &assetsPage, nil
+	return assets, nil
 }
 
 func removeInvalidAssets(assets []Asset) []Asset {
@@ -60,33 +52,6 @@ func removeInvalidAssets(assets []Asset) []Asset {
 	}
 
 	return filtered
-}
-
-func (c Client) GetAssetById(id string) (*Asset, error) {
-	request, err := c.setUpRequest(http.MethodGet, c.config.AssetsUrl+"/"+id, nil)
-	if err != nil {
-		return nil, fmt.Errorf("could not set up request get asset by id with assetId %s, %v", id, err.Error())
-	}
-
-	response, err := c.httpClient.Do(request)
-	if err != nil {
-		return nil, fmt.Errorf("could not execute request get asset by id %s, %v", id, err.Error())
-	}
-	defer response.Body.Close()
-
-	if err := validateResponseCode(response); err != nil {
-		return nil, err
-	}
-
-	var assets []Asset
-	if err = json.NewDecoder(response.Body).Decode(&assets); err != nil {
-		return nil, fmt.Errorf("could not parse get asset by id JSON response, %v", err.Error())
-	}
-
-	if len(assets) == 0 {
-		return nil, nil
-	}
-	return &assets[0], nil
 }
 
 func validateResponseCode(response *http.Response) error {
@@ -104,7 +69,7 @@ func validateResponseCode(response *http.Response) error {
 	return nil
 }
 
-func (c Client) setUpRequest(method, url string, body io.Reader) (*http.Request, error) {
+func (c client) setUpRequest(method, url string, body io.Reader) (*http.Request, error) {
 	request, err := http.NewRequest(method, url, body)
 	if err != nil {
 		return nil, err

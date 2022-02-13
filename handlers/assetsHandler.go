@@ -18,7 +18,7 @@ const (
 )
 
 type AssetsHandler struct {
-	Client *coinapi.Client
+	Svc *coinapi.AssetService
 }
 
 func (a AssetsHandler) GetAll(w http.ResponseWriter, r *http.Request) {
@@ -31,7 +31,7 @@ func (a AssetsHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	assetsPage, err := a.Client.GetAssetPage(page, size)
+	assetsPage, err := a.Svc.GetAssetPage(page, size)
 	if err != nil {
 		httputils.RespondWithError(w, http.StatusInternalServerError, err, "Could not retrieve assets from external api")
 		return
@@ -56,7 +56,7 @@ func getQueryParam(actual string, defaultValue int) int {
 
 func (a AssetsHandler) GetById(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
-	asset, err := a.Client.GetAssetById(id)
+	asset, err := a.Svc.GetAssetById(id)
 	if err != nil {
 		httputils.RespondWithError(w, http.StatusInternalServerError, err, fmt.Sprintf("Could not retrieve asset with id %s from external api", id))
 		return
