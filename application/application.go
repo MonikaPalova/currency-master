@@ -28,7 +28,7 @@ func New() Application {
 	var a Application
 	a.initDB()
 	a.ASvc = svc.NewAssets()
-	a.USvc = &svc.Users{ASvc: a.ASvc, DB: a.db.UsersDBHandler}
+	a.USvc = &svc.Users{ASvc: a.ASvc, UDB: a.db.UsersDBHandler, UaDB: a.db.UserAssetsDBHandler}
 	a.setupHTTP()
 	// setup app
 	return a
@@ -69,7 +69,7 @@ func (a *Application) setupUsersHandler() {
 }
 
 func (a *Application) setupUserAssetsHandler() {
-	userAssetsHandler := handlers.UserAssetsHandler{UaDB: a.db.UserAssetsDBHandler, UDB: a.db.UsersDBHandler, Svc: a.ASvc}
+	userAssetsHandler := handlers.UserAssetsHandler{ASvc: a.ASvc, USvc: a.USvc}
 	a.router.Path(userAssetsApiV1).Methods(http.MethodGet).HandlerFunc(userAssetsHandler.GetAll)
 	a.router.Path(userAssetsApiV1 + "/{id}").Methods(http.MethodGet).HandlerFunc(userAssetsHandler.GetByID)
 	a.router.Path(userAssetsApiV1 + "/{id}/buy").Methods(http.MethodPost).HandlerFunc(userAssetsHandler.Buy)

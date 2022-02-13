@@ -8,18 +8,18 @@ const minutesToKeepCache = 5
 
 type Cache struct {
 	assets  []Asset
-	ids     map[string]*Asset
+	ids     map[string]int
 	expires time.Time
 }
 
 func NewCache() *Cache {
-	return &Cache{assets: []Asset{}, ids: make(map[string]*Asset), expires: time.Now()}
+	return &Cache{assets: []Asset{}, ids: make(map[string]int), expires: time.Now()}
 }
 
 func (c *Cache) Fill(assets []Asset) {
 	c.assets = assets
-	for _, asset := range assets {
-		c.ids[asset.ID] = &asset
+	for idx, asset := range assets {
+		c.ids[asset.ID] = idx
 	}
 	c.expires = time.Now().Add(time.Minute * minutesToKeepCache)
 }
@@ -47,8 +47,7 @@ func (c Cache) GetAsset(id string) *Asset {
 		c.cleanCache()
 		return nil
 	}
-
-	return c.ids[id]
+	return &c.assets[c.ids[id]]
 }
 
 func (c Cache) IsExpired() bool {

@@ -66,7 +66,7 @@ func (a AssetsHandler) GetById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jsonResponse, err := json.Marshal(asset)
+	jsonResponse, err := json.Marshal(*asset)
 	if err != nil {
 		httputils.RespondWithError(w, http.StatusInternalServerError, err, "Couldn not convert asset to JSON")
 		return
