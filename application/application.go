@@ -4,9 +4,9 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/MonikaPalova/currency-master/coinapi"
 	. "github.com/MonikaPalova/currency-master/db"
 	"github.com/MonikaPalova/currency-master/handlers"
+	"github.com/MonikaPalova/currency-master/svc"
 	"github.com/gorilla/mux"
 )
 
@@ -20,13 +20,15 @@ const (
 type Application struct {
 	db     *Database
 	router *mux.Router
-	svc    *coinapi.AssetService
+	ASvc   *svc.Assets
+	USvc   *svc.Users
 }
 
 func New() Application {
 	var a Application
 	a.initDB()
-	a.svc = coinapi.NewAssetService()
+	a.ASvc = svc.NewAssets()
+	a.USvc = &svc.Users{ASvc: a.ASvc, DB: a.db.UsersDBHandler}
 	a.setupHTTP()
 	// setup app
 	return a
@@ -54,20 +56,20 @@ func (a *Application) setupHTTP() {
 }
 
 func (a *Application) setupAssetsHandler() {
-	assetsHandler := handlers.AssetsHandler{Svc: a.svc}
+	assetsHandler := handlers.AssetsHandler{Svc: a.ASvc}
 	a.router.Path(assetsApiV1).Methods(http.MethodGet).HandlerFunc(assetsHandler.GetAll)
 	a.router.Path(assetsApiV1 + "/{id}").Methods(http.MethodGet).HandlerFunc(assetsHandler.GetById)
 }
 
 func (a *Application) setupUsersHandler() {
-	usersHandler := handlers.UsersHandler{DB: a.db.UsersDBHandler}
+	usersHandler := handlers.UsersHandler{Svc: a.USvc}
 	a.router.Path(usersApiV1).Methods(http.MethodGet).HandlerFunc(usersHandler.GetAll)
 	a.router.Path(usersApiV1 + "/{username}").Methods(http.MethodGet).HandlerFunc(usersHandler.GetByUsername)
 	a.router.Path(usersApiV1).Methods(http.MethodPost).HandlerFunc(usersHandler.Post)
 }
 
 func (a *Application) setupUserAssetsHandler() {
-	userAssetsHandler := handlers.UserAssetsHandler{UaDB: a.db.UserAssetsDBHandler, UDB: a.db.UsersDBHandler, Svc: a.svc}
+	userAssetsHandler := handlers.UserAssetsHandler{UaDB: a.db.UserAssetsDBHandler, UDB: a.db.UsersDBHandler, Svc: a.ASvc}
 	a.router.Path(userAssetsApiV1).Methods(http.MethodGet).HandlerFunc(userAssetsHandler.GetAll)
 	a.router.Path(userAssetsApiV1 + "/{id}").Methods(http.MethodGet).HandlerFunc(userAssetsHandler.GetByID)
 	a.router.Path(userAssetsApiV1 + "/{id}/buy").Methods(http.MethodPost).HandlerFunc(userAssetsHandler.Buy)

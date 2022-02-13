@@ -8,8 +8,8 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/MonikaPalova/currency-master/coinapi"
 	"github.com/MonikaPalova/currency-master/httputils"
+	"github.com/MonikaPalova/currency-master/svc"
 )
 
 const (
@@ -18,7 +18,7 @@ const (
 )
 
 type AssetsHandler struct {
-	Svc *coinapi.AssetService
+	Svc *svc.Assets
 }
 
 func (a AssetsHandler) GetAll(w http.ResponseWriter, r *http.Request) {

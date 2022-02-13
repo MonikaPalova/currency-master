@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/MonikaPalova/currency-master/coinapi"
 	"github.com/MonikaPalova/currency-master/db"
 	"github.com/MonikaPalova/currency-master/httputils"
+	"github.com/MonikaPalova/currency-master/svc"
 	"github.com/gorilla/mux"
 )
 
@@ -16,7 +16,7 @@ type UserAssetsHandler struct {
 	UaDB *db.UserAssetsDBHandler
 	UDB  *db.UsersDBHandler
 	ADB  *db.AcquisitionsDBHandler
-	Svc  *coinapi.AssetService
+	Svc  *svc.Assets
 }
 
 type userAssetOperation struct {
@@ -40,6 +40,11 @@ func (u UserAssetsHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// if err := calculateValuation(assets); err != nil {
+	// 	httputils.RespondWithError(w, http.StatusInternalServerError, err, "error when calculating assets valuation")
+	// 	return
+	// }
+
 	jsonResponse, err := json.Marshal(assets)
 	if err != nil {
 		httputils.RespondWithError(w, http.StatusInternalServerError, err, "could not convert user assets to JSON")
@@ -60,6 +65,11 @@ func (u UserAssetsHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 		httputils.RespondWithError(w, http.StatusNotFound, nil, fmt.Sprintf("user with username %s doesn't have asset with id %s", username, id))
 		return
 	}
+
+	// if err := calculateValuation(asset); err != nil {
+	// 	httputils.RespondWithError(w, http.StatusInternalServerError, err, "error when calculating asset valuation")
+	// 	return
+	// }
 
 	jsonResponse, err := json.Marshal(asset)
 	if err != nil {

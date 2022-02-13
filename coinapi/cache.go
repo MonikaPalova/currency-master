@@ -6,17 +6,17 @@ import (
 
 const minutesToKeepCache = 5
 
-type cache struct {
+type Cache struct {
 	assets  []Asset
 	ids     map[string]*Asset
 	expires time.Time
 }
 
-func newCache() *cache {
-	return &cache{assets: []Asset{}, ids: make(map[string]*Asset), expires: time.Now()}
+func NewCache() *Cache {
+	return &Cache{assets: []Asset{}, ids: make(map[string]*Asset), expires: time.Now()}
 }
 
-func (c *cache) fill(assets []Asset) {
+func (c *Cache) Fill(assets []Asset) {
 	c.assets = assets
 	for _, asset := range assets {
 		c.ids[asset.ID] = &asset
@@ -24,8 +24,8 @@ func (c *cache) fill(assets []Asset) {
 	c.expires = time.Now().Add(time.Minute * minutesToKeepCache)
 }
 
-func (c cache) getPage(page, size int) AssetPage {
-	if c.isExpired() {
+func (c Cache) GetPage(page, size int) AssetPage {
+	if c.IsExpired() {
 		c.cleanCache()
 		return AssetPage{[]Asset{}, page, size, 0}
 	}
@@ -42,8 +42,8 @@ func (c cache) getPage(page, size int) AssetPage {
 	return AssetPage{c.assets[from:to], page, size, total}
 }
 
-func (c cache) getAsset(id string) *Asset {
-	if c.isExpired() {
+func (c Cache) GetAsset(id string) *Asset {
+	if c.IsExpired() {
 		c.cleanCache()
 		return nil
 	}
@@ -51,10 +51,10 @@ func (c cache) getAsset(id string) *Asset {
 	return c.ids[id]
 }
 
-func (c cache) isExpired() bool {
+func (c Cache) IsExpired() bool {
 	return c.expires.Before(time.Now())
 }
 
-func (c *cache) cleanCache() {
+func (c *Cache) cleanCache() {
 	c.assets = []Asset{}
 }

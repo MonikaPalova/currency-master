@@ -45,7 +45,7 @@ func (u UsersDBHandler) Create(user model.User) (*model.User, error) {
 	return &user, nil
 }
 
-func (u UsersDBHandler) GetAll() ([]model.User, error) {
+func (u UsersDBHandler) GetAll() ([]*model.User, error) {
 	rows, err := u.conn.Query(selectUserAndAssets)
 	if err != nil {
 		return nil, fmt.Errorf("could not retrieve users from database, %v", err)
@@ -67,10 +67,10 @@ func (u UsersDBHandler) GetByUsernameWithAssets(username string) (*model.User, e
 	if len(users) == 0 {
 		return nil, nil
 	}
-	return &users[0], nil
+	return users[0], nil
 }
 
-func deserializeUsers(rows *sql.Rows) ([]model.User, error) {
+func deserializeUsers(rows *sql.Rows) ([]*model.User, error) {
 	usersByUsername := make(map[string]model.User)
 
 	for rows.Next() {
@@ -92,9 +92,9 @@ func deserializeUsers(rows *sql.Rows) ([]model.User, error) {
 		}
 	}
 
-	var users []model.User
+	var users []*model.User
 	for _, user := range usersByUsername {
-		users = append(users, user)
+		users = append(users, &user)
 	}
 
 	return users, nil

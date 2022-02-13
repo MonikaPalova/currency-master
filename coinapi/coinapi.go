@@ -9,16 +9,16 @@ import (
 	"github.com/MonikaPalova/currency-master/config"
 )
 
-type client struct {
+type Client struct {
 	httpClient *http.Client
 	config     *config.CoinAPI
 }
 
-func newClient() *client {
-	return &client{&http.Client{}, config.NewCoinAPI()}
+func NewClient() *Client {
+	return &Client{&http.Client{}, config.NewCoinAPI()}
 }
 
-func (c client) getAssets() ([]Asset, error) {
+func (c Client) GetAssets() ([]Asset, error) {
 	request, err := c.setUpRequest(http.MethodGet, c.config.AssetsUrl, nil)
 	if err != nil {
 		return nil, fmt.Errorf("could not set up get assets request, %v", err.Error())
@@ -69,7 +69,7 @@ func validateResponseCode(response *http.Response) error {
 	return nil
 }
 
-func (c client) setUpRequest(method, url string, body io.Reader) (*http.Request, error) {
+func (c Client) setUpRequest(method, url string, body io.Reader) (*http.Request, error) {
 	request, err := http.NewRequest(method, url, body)
 	if err != nil {
 		return nil, err

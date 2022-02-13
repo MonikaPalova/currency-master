@@ -5,16 +5,14 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/MonikaPalova/currency-master/db"
 	"github.com/MonikaPalova/currency-master/httputils"
 	"github.com/MonikaPalova/currency-master/model"
+	"github.com/MonikaPalova/currency-master/svc"
 	"github.com/gorilla/mux"
 )
 
-const startUserUSD = 100
-
 type UsersHandler struct {
-	DB *db.UsersDBHandler
+	Svc *svc.Users
 }
 
 func (u UsersHandler) Post(w http.ResponseWriter, r *http.Request) {
@@ -29,8 +27,7 @@ func (u UsersHandler) Post(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user.USD = startUserUSD
-	createdUser, err := u.DB.Create(user)
+	createdUser, err := u.Svc.Create(user)
 	if err != nil {
 		httputils.RespondWithError(w, http.StatusInternalServerError, err, "could not create user in database")
 		return
@@ -38,7 +35,6 @@ func (u UsersHandler) Post(w http.ResponseWriter, r *http.Request) {
 	if createdUser == nil {
 		httputils.RespondWithError(w, http.StatusConflict, nil, fmt.Sprintf("user with username %s already exists", user.Username))
 		return
-
 	}
 
 	jsonResponse, err := json.Marshal(createdUser)
@@ -50,7 +46,7 @@ func (u UsersHandler) Post(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u UsersHandler) GetAll(w http.ResponseWriter, r *http.Request) {
-	users, err := u.DB.GetAll()
+	users, err := u.Svc.GetAll()
 	if err != nil {
 		httputils.RespondWithError(w, http.StatusInternalServerError, err, "could not retrieve users from database")
 		return
@@ -66,7 +62,7 @@ func (u UsersHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 
 func (u UsersHandler) GetByUsername(w http.ResponseWriter, r *http.Request) {
 	username := mux.Vars(r)["username"]
-	user, err := u.DB.GetByUsernameWithAssets(username)
+	user, err := u.Svc.GetByUsername(username)
 	if err != nil {
 		httputils.RespondWithError(w, http.StatusInternalServerError, err, fmt.Sprintf("could not retrieve user with username %s from database", username))
 		return
