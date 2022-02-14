@@ -6,13 +6,64 @@ servers:
 - url: http://localhost:7777/api/v1
   description: Local server
 tags:
+- name: "Authentication"
 - name: "Users"
 - name: "User Assets"
-- name: "Login"
-- name: "Logout"
 - name: "Assets"
 - name: "Acquisitions"
 paths:
+  /users/{username}/login:
+    post:
+      tags:
+      - "Authentication"
+      summary: "Create a new session and set cookie for user"
+      requestBody:
+        description: "Login credentials"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginCredentials"
+      parameters:
+      - name: "username"
+        in: "path"
+        description: "Username of user to log in"
+        required: true
+        schema:
+          type: "string"
+      responses:
+        "200":
+          description: "Session was created and cookie is set"
+          headers: 
+            Set-Cookie:
+              schema: 
+                type: "string"
+                example: "CURRENCY_MASTER_SESSION_ID=abcde12345; Path=/; HttpOnly"
+        "401":
+          description: "Incorrect credentials"
+      security: []
+  /users/{username}/logout:
+    post:
+      tags:
+      - "Authentication"
+      summary: "Deletes the session of the user if it exists"
+      parameters:
+      - name: "username"
+        in: "path"
+        description: "Username of user to log out"
+        required: true
+        schema:
+          type: "string"
+      responses:
+        "200":
+          description: "Session was deleted successfully"
+          headers: 
+            Set-Cookie:
+              schema: 
+                type: "string"
+                example: ""
+      security:
+        - cookieAuth: []
   /users:
     get:
       tags:
@@ -215,58 +266,6 @@ paths:
           description: "Not enough quantity to sell"
         "410":
           description: "User has quantity of the asset but the asset is discontinued and cannot be sold"
-      security:
-        - cookieAuth: []
-  /users/{username}/login:
-    post:
-      tags:
-      - "Login"
-      summary: "Create a new session and set cookie for user"
-      requestBody:
-        description: "Login credentials"
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/LoginCredentials"
-      parameters:
-      - name: "username"
-        in: "path"
-        description: "Username of user to log in"
-        required: true
-        schema:
-          type: "string"
-      responses:
-        "200":
-          description: "Session was created and cookie is set"
-          headers: 
-            Set-Cookie:
-              schema: 
-                type: "string"
-                example: "CURRENCY_MASTER_SESSION_ID=abcde12345; Path=/; HttpOnly"
-        "401":
-          description: "Incorrect credentials"
-      security: []
-  /users/{username}/logout:
-    post:
-      tags:
-      - "Logout"
-      summary: "Deletes the session of the user if it exists"
-      parameters:
-      - name: "username"
-        in: "path"
-        description: "Username of user to log out"
-        required: true
-        schema:
-          type: "string"
-      responses:
-        "200":
-          description: "Session was deleted successfully"
-          headers: 
-            Set-Cookie:
-              schema: 
-                type: "string"
-                example: ""
       security:
         - cookieAuth: []
   /assets:
