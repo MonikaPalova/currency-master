@@ -11,6 +11,7 @@ tags:
 - name: "Login"
 - name: "Logout"
 - name: "Assets"
+- name: "Acquisitions"
 paths:
   /users:
     get:
@@ -78,6 +79,33 @@ paths:
           description: "User is not found"
       security:
         - cookieAuth: []
+  /users/{username}/assets:
+    get:
+      tags:
+      - "User Assets"
+      summary: "Get assets owned by user"
+      parameters:
+      - name: "username"
+        in: "path"
+        description: "Username of user assets to get"
+        required: true
+        schema:
+          type: "string"
+      responses:
+        "200":
+          description: "Returned user assets"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserAsset"
+        "401":
+          description: "This request requires authentication"
+        "404":
+          description: "User is not found"
+      security:
+        - cookieAuth: []
   /users/{username}/assets/{id}:
     get:
       tags:
@@ -139,7 +167,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/UserAsset"
+                $ref: "#/components/schemas/Acquisition"
         "401":
           description: "This request requires authentication"
         "404":
@@ -178,7 +206,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/UserAsset"
+                $ref: "#/components/schemas/AssetOperationResponse"
         "401":
           description: "This request requires authentication"
         "404":
@@ -187,33 +215,6 @@ paths:
           description: "Not enough quantity to sell"
         "410":
           description: "User has quantity of the asset but the asset is discontinued and cannot be sold"
-      security:
-        - cookieAuth: []
-  /users/{username}/assets:
-    get:
-      tags:
-      - "User Assets"
-      summary: "Get assets owned by user"
-      parameters:
-      - name: "username"
-        in: "path"
-        description: "Username of user assets to get"
-        required: true
-        schema:
-          type: "string"
-      responses:
-        "200":
-          description: "Returned user assets"
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/UserAsset"
-        "401":
-          description: "This request requires authentication"
-        "404":
-          description: "User is not found"
       security:
         - cookieAuth: []
   /users/{username}/login:
@@ -268,31 +269,6 @@ paths:
                 example: ""
       security:
         - cookieAuth: []
-  /assets/{id}:
-    get:
-      tags:
-      - "Assets"
-      summary: "Get asset with id from external api"
-      parameters:
-      - name: "id"
-        in: "path"
-        description: "Id of asset to get"
-        required: true
-        schema:
-          type: "string"
-      responses:
-        "200":
-          description: "Returned asset"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Asset"
-        "401":
-          description: "This request requires authentication"
-        "404":
-          description: "Asset is not found"
-      security:
-        - cookieAuth: []
   /assets:
     get:
       tags:
@@ -326,6 +302,31 @@ paths:
           description: "This request requires authentication"
         "400":
           description: "Page or size are set but are not positive integers"
+      security:
+        - cookieAuth: []
+  /assets/{id}:
+    get:
+      tags:
+      - "Assets"
+      summary: "Get asset with id from external api"
+      parameters:
+      - name: "id"
+        in: "path"
+        description: "Id of asset to get"
+        required: true
+        schema:
+          type: "string"
+      responses:
+        "200":
+          description: "Returned asset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Asset"
+        "401":
+          description: "This request requires authentication"
+        "404":
+          description: "Asset is not found"
       security:
         - cookieAuth: []
 components:
@@ -367,6 +368,8 @@ components:
         name:
           type: string
         quantity:
+          type: number
+        valuation:
           type: number
     UserToCreate:
       type: "object"
@@ -415,3 +418,14 @@ components:
         page: 1
         size: 1
         totalResults: 3200
+    AssetOperationResponse:
+      type: object
+      properties:
+        username:
+          type: string
+        assetId:
+          type: string
+        balance:
+          type: number
+        quantity:
+          type: number
