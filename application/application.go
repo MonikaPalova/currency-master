@@ -20,15 +20,13 @@ const (
 type Application struct {
 	db     *Database
 	router *mux.Router
-	ASvc   *svc.Assets
-	USvc   *svc.Users
+	svc    *svc.Service
 }
 
 func New() Application {
 	var a Application
 	a.initDB()
-	a.ASvc = svc.NewAssets()
-	a.USvc = &svc.Users{ASvc: a.ASvc, UDB: a.db.UsersDBHandler, UaDB: a.db.UserAssetsDBHandler}
+	a.svc = svc.NewSvc(a.db)
 	a.setupHTTP()
 	// setup app
 	return a
@@ -56,20 +54,20 @@ func (a *Application) setupHTTP() {
 }
 
 func (a *Application) setupAssetsHandler() {
-	assetsHandler := handlers.AssetsHandler{Svc: a.ASvc}
+	assetsHandler := handlers.AssetsHandler{Svc: a.svc.ASvc}
 	a.router.Path(assetsApiV1).Methods(http.MethodGet).HandlerFunc(assetsHandler.GetAll)
 	a.router.Path(assetsApiV1 + "/{id}").Methods(http.MethodGet).HandlerFunc(assetsHandler.GetById)
 }
 
 func (a *Application) setupUsersHandler() {
-	usersHandler := handlers.UsersHandler{Svc: a.USvc}
+	usersHandler := handlers.UsersHandler{Svc: a.svc.USvc}
 	a.router.Path(usersApiV1).Methods(http.MethodGet).HandlerFunc(usersHandler.GetAll)
 	a.router.Path(usersApiV1 + "/{username}").Methods(http.MethodGet).HandlerFunc(usersHandler.GetByUsername)
 	a.router.Path(usersApiV1).Methods(http.MethodPost).HandlerFunc(usersHandler.Post)
 }
 
 func (a *Application) setupUserAssetsHandler() {
-	userAssetsHandler := handlers.UserAssetsHandler{ASvc: a.ASvc, USvc: a.USvc}
+	userAssetsHandler := handlers.UserAssetsHandler{ASvc: a.svc.ASvc, USvc: a.svc.USvc, ADB: a.db.AcquisitionsDBHandler}
 	a.router.Path(userAssetsApiV1).Methods(http.MethodGet).HandlerFunc(userAssetsHandler.GetAll)
 	a.router.Path(userAssetsApiV1 + "/{id}").Methods(http.MethodGet).HandlerFunc(userAssetsHandler.GetByID)
 	a.router.Path(userAssetsApiV1 + "/{id}/buy").Methods(http.MethodPost).HandlerFunc(userAssetsHandler.Buy)

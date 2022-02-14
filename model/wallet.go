@@ -17,5 +17,6 @@ type Acquisition struct {
 	AssetId  string    `json:"assetId"`
 	Quantity float64   `json:"quantity"`
 	PriceUSD float64   `json:"priceUSD"`
+	TotalUSD float64   `json:"totalUSD"`
 	Created  time.Time `json:"purchaseDate"`
 }

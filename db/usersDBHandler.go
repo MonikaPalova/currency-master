@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 
 	"github.com/MonikaPalova/currency-master/model"
@@ -98,44 +99,21 @@ func deserializeUsers(rows *sql.Rows) ([]model.User, error) {
 	return users, nil
 }
 
-func (u UsersDBHandler) AddUSD(username string, usd float64) (float64, error) {
-	user, err := u.GetByUsername(username)
-	if err != nil {
-		return -1, err
-	}
-
-	money := user.USD + usd
-	if err := u.updateUSD(user.Username, money); err != nil {
-		return -1, err
-	}
-	return money, nil
-}
-
-func (u UsersDBHandler) DeductUSD(username string, usd float64) (float64, error) {
-	user, err := u.GetByUsername(username)
-	if err != nil {
-		return -1, err
-	}
-
-	money := user.USD - usd
-	if err := u.updateUSD(user.Username, money); err != nil {
-		return -1, err
-	}
-	return money, nil
-}
-
 func (u UsersDBHandler) GetByUsername(username string) (*model.User, error) {
 	row := u.conn.QueryRow(selectUser, username)
 
 	var user model.User
 	if err := row.Scan(&user.Username, &user.Email, &user.USD); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
 		return nil, fmt.Errorf("could not read user row, %v", err)
 	}
 
 	return &user, nil
 }
 
-func (u UsersDBHandler) updateUSD(username string, money float64) error {
+func (u UsersDBHandler) UpdateUSD(username string, money float64) error {
 	updateStmt, err := u.conn.Prepare(updateUserUSD)
 	if err != nil {
 		return fmt.Errorf("error when preparing update statement for user in database, %v", err)

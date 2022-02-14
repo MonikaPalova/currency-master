@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	selectAcquisitions = "SELECT username, asset_id, quantity, price_usd, created FROM ACQUISITIONS;"
+	selectAcquisitions = "SELECT username, asset_id, quantity, price_usd, quantity*price_usd AS total_usd, created FROM ACQUISITIONS;"
 	insertAcquisition  = "INSERT INTO ACQUISITIONS (username, asset_id, price_usd, quantity, created) VALUES (?, ?, ?, ?, ?);"
 )
 
@@ -29,10 +29,9 @@ func deserializeAcquisitions(rows *sql.Rows) ([]model.Acquisition, error) {
 	acqs := []model.Acquisition{}
 	for rows.Next() {
 		var acq model.Acquisition
-		if err := rows.Scan(&acq.Username, &acq.AssetId, &acq.Quantity, &acq.PriceUSD, &acq.Created); err != nil {
+		if err := rows.Scan(&acq.Username, &acq.AssetId, &acq.Quantity, &acq.PriceUSD, &acq.TotalUSD, &acq.Created); err != nil {
 			return nil, fmt.Errorf("could not read user asset row, %v", err)
 		}
-
 		acqs = append(acqs, acq)
 	}
 
