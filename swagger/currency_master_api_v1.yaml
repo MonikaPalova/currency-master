@@ -329,6 +329,24 @@ paths:
           description: "Asset is not found"
       security:
         - cookieAuth: []
+  /acquisitions:
+    get:
+      tags:
+      - "Acquisitions"
+      summary: "Get acquisitions"
+      responses:
+        "200":
+          description: "List of all acquisitions"
+          content:
+            application/json:
+              schema:
+                type: array
+                items: 
+                  $ref: "#/components/schemas/Acquisition"
+        "401":
+          description: "This request requires authentication"
+      security:
+        - cookieAuth: []
 components:
   securitySchemes:
     cookieAuth:
@@ -429,3 +447,26 @@ components:
           type: number
         quantity:
           type: number
+    Acquisition:
+      type: object
+      properties:
+        username:
+          type: string
+        assetId:
+          type: string
+        priceUSD:
+          type: number
+        quantity:
+          type: number
+        totalUSD:
+          type: number
+        purchaseDate:
+          type: string
+          format: date-time
+      example:
+        username: "monika"
+        assetId: "BTA"
+        quantity: 3
+        priceUSD: 0.0337376
+        totalUSD: 0.10121287778019905
+        purchaseDate: "2022-02-14T10:30:50Z"
