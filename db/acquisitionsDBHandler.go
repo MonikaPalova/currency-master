@@ -8,8 +8,9 @@ import (
 )
 
 const (
-	selectAcquisitions = "SELECT username, asset_id, quantity, price_usd, quantity*price_usd AS total_usd, created FROM ACQUISITIONS;"
-	insertAcquisition  = "INSERT INTO ACQUISITIONS (username, asset_id, price_usd, quantity, created) VALUES (?, ?, ?, ?, ?);"
+	selectAcquisitions           = "SELECT username, asset_id, quantity, price_usd, quantity*price_usd AS total_usd, created FROM ACQUISITIONS;"
+	selectAcquisitionsByUsername = "SELECT username, asset_id, quantity, price_usd, quantity*price_usd AS total_usd, created FROM ACQUISITIONS WHERE username=?;"
+	insertAcquisition            = "INSERT INTO ACQUISITIONS (username, asset_id, price_usd, quantity, created) VALUES (?, ?, ?, ?, ?);"
 )
 
 type AcquisitionsDBHandler struct {
@@ -20,6 +21,15 @@ func (a AcquisitionsDBHandler) GetAll() ([]model.Acquisition, error) {
 	rows, err := a.conn.Query(selectAcquisitions)
 	if err != nil {
 		return nil, fmt.Errorf("could not retrieve acquisitions from database, %v", err)
+	}
+
+	return deserializeAcquisitions(rows)
+}
+
+func (a AcquisitionsDBHandler) GetByUsername(username string) ([]model.Acquisition, error) {
+	rows, err := a.conn.Query(selectAcquisitionsByUsername, username)
+	if err != nil {
+		return nil, fmt.Errorf("could not retrieve acquisitions by username from database, %v", err)
 	}
 
 	return deserializeAcquisitions(rows)
