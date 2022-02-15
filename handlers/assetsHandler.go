@@ -17,10 +17,12 @@ const (
 	defaultSize = 10
 )
 
+// assets API
 type AssetsHandler struct {
 	Svc *svc.Assets
 }
 
+// gets a page of assets
 func (a AssetsHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	queryParams := r.URL.Query()
 	page := getQueryParam(queryParams.Get("page"), defaultPage)
@@ -54,6 +56,7 @@ func getQueryParam(actual string, defaultValue int) int {
 	}
 }
 
+// gets asset by id
 func (a AssetsHandler) GetById(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 	asset, err := a.Svc.GetAssetById(id)

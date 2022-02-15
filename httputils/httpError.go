@@ -6,6 +6,7 @@ import (
 	"net/http"
 )
 
+// writes an error response to writer
 func RespondWithError(w http.ResponseWriter, statusCode int, err error, msg string) {
 	errMsg := msg
 	if err != nil {
@@ -21,6 +22,7 @@ func RespondWithError(w http.ResponseWriter, statusCode int, err error, msg stri
 	}
 }
 
+// writes an OK response to writer
 func RespondOK(w http.ResponseWriter, jsonResponse []byte) {
 	w.WriteHeader(http.StatusOK)
 	w.Write(jsonResponse)

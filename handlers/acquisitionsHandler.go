@@ -7,13 +7,14 @@ import (
 	"github.com/MonikaPalova/currency-master/db"
 	"github.com/MonikaPalova/currency-master/httputils"
 	"github.com/MonikaPalova/currency-master/model"
-	"github.com/gorilla/mux"
 )
 
+// acquisitions API
 type AcquisitionsHandler struct {
 	DB *db.AcquisitionsDBHandler
 }
 
+// handles get all acquisitions request and applies username filter if needed
 func (a AcquisitionsHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	queryParams := r.URL.Query()
 	username := queryParams.Get("username")
@@ -25,22 +26,6 @@ func (a AcquisitionsHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	} else {
 		acqs, err = a.DB.GetAll()
 	}
-	if err != nil {
-		httputils.RespondWithError(w, http.StatusInternalServerError, err, "could not retrieve acquisitions from database")
-		return
-	}
-
-	jsonResponse, err := json.Marshal(acqs)
-	if err != nil {
-		httputils.RespondWithError(w, http.StatusInternalServerError, err, "could not convert acquisitions to JSON")
-		return
-	}
-	httputils.RespondOK(w, jsonResponse)
-}
-
-func (a AcquisitionsHandler) GetByUsername(w http.ResponseWriter, r *http.Request) {
-	username := mux.Vars(r)["username"]
-	acqs, err := a.DB.GetByUsername(username)
 	if err != nil {
 		httputils.RespondWithError(w, http.StatusInternalServerError, err, "could not retrieve acquisitions from database")
 		return

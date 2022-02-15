@@ -14,6 +14,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// user assets API
 type UserAssetsHandler struct {
 	ADB  *db.AcquisitionsDBHandler
 	ASvc *svc.Assets
@@ -33,6 +34,7 @@ type userAssetOperationResponse struct {
 	Quantity float64 `json:"quantity"`
 }
 
+// gets all user assets for username
 func (u UserAssetsHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	username := mux.Vars(r)["username"]
 	assets, err := u.USvc.GetAssetsByUsername(username)
@@ -49,6 +51,7 @@ func (u UserAssetsHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	httputils.RespondOK(w, jsonResponse)
 }
 
+// gets user asset of user by asset id
 func (u UserAssetsHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	username := mux.Vars(r)["username"]
 	id := mux.Vars(r)["id"]
@@ -70,6 +73,7 @@ func (u UserAssetsHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	httputils.RespondOK(w, jsonResponse)
 }
 
+// buys asset for user with the given quantity
 func (u UserAssetsHandler) Buy(w http.ResponseWriter, r *http.Request) {
 	operation, err := getOperation(r)
 	if err != nil {
@@ -146,6 +150,7 @@ func (u UserAssetsHandler) Buy(w http.ResponseWriter, r *http.Request) {
 	httputils.RespondOK(w, jsonResponse)
 }
 
+// sells the given quantity of an asset owned by user
 func (u UserAssetsHandler) Sell(w http.ResponseWriter, r *http.Request) {
 	operation, err := getOperation(r)
 	if err != nil {

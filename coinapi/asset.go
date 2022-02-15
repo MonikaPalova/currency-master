@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 )
 
+// Asset object received from external api
 type Asset struct {
 	ID       string  `json:"id"`
 	Name     string  `json:"name"`
@@ -11,6 +12,7 @@ type Asset struct {
 	PriceUSD float64 `json:"priceUSD"`
 }
 
+// Page with assets
 type AssetPage struct {
 	Assets []Asset `json:"assets"`
 	Page   int     `json:"page"`
@@ -18,6 +20,7 @@ type AssetPage struct {
 	Total  int     `json:"totalResults"`
 }
 
+// formats asset object received from external api to Asset object
 func (a *Asset) UnmarshalJSON(bytes []byte) (err error) {
 	var asset struct {
 		ID       string  `json:"asset_id"`
@@ -35,9 +38,4 @@ func (a *Asset) UnmarshalJSON(bytes []byte) (err error) {
 	a.PriceUSD = asset.PriceUSD
 
 	return err
-}
-
-func (a Asset) String() string {
-	bytes, _ := json.Marshal(a)
-	return string(bytes)
 }

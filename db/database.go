@@ -13,6 +13,7 @@ const (
 	createTablesFile = "./sql/create_tables.sql"
 )
 
+// Includes all database communication objects
 type Database struct {
 	conn *sql.DB
 
@@ -21,6 +22,7 @@ type Database struct {
 	AcquisitionsDBHandler *AcquisitionsDBHandler
 }
 
+// creates new database connection and db handlers
 func NewDB() (*Database, error) {
 	config := config.NewMysql()
 	dbConnStr := fmt.Sprintf("%s:%s@/?multiStatements=true&parseTime=true", config.User, config.Password)

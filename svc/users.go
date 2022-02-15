@@ -7,14 +7,17 @@ import (
 	"github.com/MonikaPalova/currency-master/model"
 )
 
+// usd with which each user starts
 const startUserUSD = 100
 
+// users service to handle users, user assets and their valuation
 type Users struct {
 	ASvc *Assets
 	UDB  *db.UsersDBHandler
 	UaDB *db.UserAssetsDBHandler
 }
 
+// create a user
 func (u Users) Create(user model.User) (*model.User, error) {
 	user.USD = startUserUSD
 	user.Valuation = 0
@@ -22,16 +25,16 @@ func (u Users) Create(user model.User) (*model.User, error) {
 	return u.UDB.Create(user)
 }
 
+// get all users  with valuation
 func (u Users) GetAll() ([]model.User, error) {
-	fmt.Println("Getting users")
 	users, err := u.UDB.GetAll()
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println(fmt.Sprintf("users %v", users))
 	return u.valUsers(users)
 }
 
+// get user with or without valuation calculated
 func (u Users) GetByUsername(username string, valuation bool) (user *model.User, err error) {
 	if valuation {
 		user, err = u.UDB.GetByUsernameWithAssets(username)
@@ -46,6 +49,7 @@ func (u Users) GetByUsername(username string, valuation bool) (user *model.User,
 	return u.valUser(*user)
 }
 
+// get user assets owned by user with valuation
 func (u Users) GetAssetsByUsername(username string) ([]model.UserAsset, error) {
 	assets, err := u.UaDB.GetByUsername(username)
 	if err != nil {
@@ -56,6 +60,7 @@ func (u Users) GetAssetsByUsername(username string) ([]model.UserAsset, error) {
 	return assets, err
 }
 
+// get specific user asset by id with valuation
 func (u Users) GetAssetByUsernameAndId(username, id string) (*model.UserAsset, error) {
 	asset, err := u.UaDB.GetByUsernameAndId(username, id)
 	if err != nil || asset == nil {
@@ -114,18 +119,22 @@ func (u Users) valAsset(asset model.UserAsset) (*model.UserAsset, error) {
 	return &asset, nil
 }
 
+// create new user asset
 func (u Users) CreateAsset(asset model.UserAsset) (*model.UserAsset, error) {
 	return u.UaDB.Create(asset)
 }
 
+//delete existing user asset
 func (u Users) DeleteAsset(asset model.UserAsset) error {
 	return u.UaDB.Delete(asset)
 }
 
+// update user asset
 func (u Users) UpdateAsset(asset model.UserAsset) (*model.UserAsset, error) {
 	return u.UaDB.Update(asset)
 }
 
+// add usd to user balance
 func (u Users) AddUSD(username string, usd float64) (float64, error) {
 	user, err := u.UDB.GetByUsername(username)
 	if err != nil {
@@ -142,6 +151,7 @@ func (u Users) AddUSD(username string, usd float64) (float64, error) {
 	return money, nil
 }
 
+// deduct usd from user balance
 func (u Users) DeductUSD(username string, usd float64) (float64, error) {
 	user, err := u.UDB.GetByUsername(username)
 	if err != nil {

@@ -9,13 +9,25 @@ const (
 	notBlankErrTemplate = "%s should not be blank"
 )
 
+// object to represent a user
 type User struct {
-	Username  string      `json:"username"`
-	Password  string      `json:"password,omitempty"`
-	Email     string      `json:"email"`
-	USD       float64     `json:"usd"`
-	Assets    []UserAsset `json:"assets"`
-	Valuation float64     `json:"valuation"`
+	// username
+	Username string `json:"username"`
+
+	// password
+	Password string `json:"password,omitempty"`
+
+	// email
+	Email string `json:"email"`
+
+	// current USD balance
+	USD float64 `json:"usd"`
+
+	// user assets
+	Assets []UserAsset `json:"assets"`
+
+	// the usd value of all the assets owned if sold now
+	Valuation float64 `json:"valuation"`
 }
 
 // TODO finish

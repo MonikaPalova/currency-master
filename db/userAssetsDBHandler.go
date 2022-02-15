@@ -17,10 +17,12 @@ const (
 	deleteAsset                 = "DELETE FROM USER_ASSETS WHERE username=? AND asset_id=?;"
 )
 
+// Handles sql operations to  USER_ASSETS table
 type UserAssetsDBHandler struct {
 	conn *sql.DB
 }
 
+// gets all user assets owned by user
 func (u UserAssetsDBHandler) GetByUsername(username string) ([]model.UserAsset, error) {
 	rows, err := u.conn.Query(selectAssetsByUsername, username)
 	if err != nil {
@@ -44,6 +46,7 @@ func deserializeUserAssets(rows *sql.Rows) ([]model.UserAsset, error) {
 	return assets, nil
 }
 
+// gets user asset owned by user for asset with specific id, if exists
 func (u UserAssetsDBHandler) GetByUsernameAndId(username, id string) (*model.UserAsset, error) {
 	row := u.conn.QueryRow(selectAssetsByUsernameAndId, username, id)
 
@@ -58,6 +61,7 @@ func (u UserAssetsDBHandler) GetByUsernameAndId(username, id string) (*model.Use
 	return &asset, nil
 }
 
+// saves a new user asset in the database
 func (u UserAssetsDBHandler) Create(asset model.UserAsset) (*model.UserAsset, error) {
 	insertStmt, err := u.conn.Prepare(insertAsset)
 	if err != nil {
@@ -77,6 +81,7 @@ func (u UserAssetsDBHandler) Create(asset model.UserAsset) (*model.UserAsset, er
 	return &asset, nil
 }
 
+// updates the quantity of an existing user asset
 func (u UserAssetsDBHandler) Update(asset model.UserAsset) (*model.UserAsset, error) {
 	updateStmt, err := u.conn.Prepare(updateAsset)
 	if err != nil {
@@ -96,6 +101,7 @@ func (u UserAssetsDBHandler) Update(asset model.UserAsset) (*model.UserAsset, er
 	return &asset, nil
 }
 
+// deletes an existing user asset
 func (u UserAssetsDBHandler) Delete(asset model.UserAsset) error {
 	deleteStmt, err := u.conn.Prepare(deleteAsset)
 	if err != nil {

@@ -11,10 +11,12 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// users API
 type UsersHandler struct {
 	Svc *svc.Users
 }
 
+// handles a create user request
 func (u UsersHandler) Post(w http.ResponseWriter, r *http.Request) {
 	var user model.User
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
@@ -45,6 +47,7 @@ func (u UsersHandler) Post(w http.ResponseWriter, r *http.Request) {
 	httputils.RespondOK(w, jsonResponse)
 }
 
+// handles get users request
 func (u UsersHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	users, err := u.Svc.GetAll()
 	if err != nil {
@@ -60,6 +63,7 @@ func (u UsersHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	httputils.RespondOK(w, jsonResponse)
 }
 
+// get specific user
 func (u UsersHandler) GetByUsername(w http.ResponseWriter, r *http.Request) {
 	username := mux.Vars(r)["username"]
 	user, err := u.Svc.GetByUsername(username, true)

@@ -17,6 +17,7 @@ const (
 	updateUserUSD                 = "UPDATE USERS SET usd = ? WHERE username=?;"
 )
 
+// Handles sql operations to USERS table
 type UsersDBHandler struct {
 	conn *sql.DB
 }
@@ -28,6 +29,7 @@ type userAsset struct {
 	quantity sql.NullFloat64
 }
 
+// saves new user in database
 func (u UsersDBHandler) Create(user model.User) (*model.User, error) {
 	insertStmt, err := u.conn.Prepare(insertUser)
 	if err != nil {
@@ -46,6 +48,7 @@ func (u UsersDBHandler) Create(user model.User) (*model.User, error) {
 	return &user, nil
 }
 
+// gets all users
 func (u UsersDBHandler) GetAll() ([]model.User, error) {
 	rows, err := u.conn.Query(selectUserAndAssets)
 	if err != nil {
@@ -54,6 +57,7 @@ func (u UsersDBHandler) GetAll() ([]model.User, error) {
 	return deserializeUsers(rows)
 }
 
+// gets user with user assets information
 func (u UsersDBHandler) GetByUsernameWithAssets(username string) (*model.User, error) {
 	rows, err := u.conn.Query(selectUserAndAssetsByUsername, username)
 	if err != nil {
@@ -99,6 +103,7 @@ func deserializeUsers(rows *sql.Rows) ([]model.User, error) {
 	return users, nil
 }
 
+// gets user without user assets information
 func (u UsersDBHandler) GetByUsername(username string) (*model.User, error) {
 	row := u.conn.QueryRow(selectUser, username)
 
@@ -113,6 +118,7 @@ func (u UsersDBHandler) GetByUsername(username string) (*model.User, error) {
 	return &user, nil
 }
 
+// updates usd value of a user
 func (u UsersDBHandler) UpdateUSD(username string, money float64) error {
 	updateStmt, err := u.conn.Prepare(updateUserUSD)
 	if err != nil {

@@ -10,6 +10,7 @@ type Mysql struct {
 	Password string
 }
 
+// MySql configuration
 func NewMysql() *Mysql {
 	return &Mysql{user, password}
 }
@@ -20,6 +21,7 @@ const (
 	apiKey       = "D8096E91-86D8-4998-B5B8-C785CE5D58AD"
 )
 
+// External Coin API configuration
 type CoinAPI struct {
 	AssetsUrl    string
 	ApiKeyHeader string
@@ -28,4 +30,19 @@ type CoinAPI struct {
 
 func NewCoinAPI() *CoinAPI {
 	return &CoinAPI{assetsUrl, apiKeyHeader, apiKey}
+}
+
+const (
+	host = "localhost"
+	port = "7777"
+)
+
+// Application configuration
+type App struct {
+	Host string
+	Port string
+}
+
+func NewApp() *App {
+	return &App{host, port}
 }

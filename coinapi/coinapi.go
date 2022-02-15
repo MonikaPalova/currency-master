@@ -9,15 +9,18 @@ import (
 	"github.com/MonikaPalova/currency-master/config"
 )
 
+// Client for communication with the external API
 type Client struct {
 	httpClient *http.Client
 	config     *config.CoinAPI
 }
 
+// Client constructor
 func NewClient() *Client {
 	return &Client{&http.Client{}, config.NewCoinAPI()}
 }
 
+// Gets all assets from external api
 func (c Client) GetAssets() ([]Asset, error) {
 	request, err := c.setUpRequest(http.MethodGet, c.config.AssetsUrl, nil)
 	if err != nil {

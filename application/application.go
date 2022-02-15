@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/MonikaPalova/currency-master/config"
 	. "github.com/MonikaPalova/currency-master/db"
 	"github.com/MonikaPalova/currency-master/handlers"
 	"github.com/MonikaPalova/currency-master/svc"
@@ -21,17 +22,21 @@ type Application struct {
 	db     *Database
 	router *mux.Router
 	svc    *svc.Service
+	config *config.App
 }
 
+// Application construtor
 func New() Application {
 	var a Application
 	a.initDB()
 	a.svc = svc.NewSvc(a.db)
 	a.setupHTTP()
 	// setup app
+	a.config = config.NewApp()
 	return a
 }
 
+// Initializes application's Database field
 func (a *Application) initDB() {
 	var err error
 	a.db, err = NewDB()
@@ -41,8 +46,9 @@ func (a *Application) initDB() {
 	log.Println("Successful database connection!")
 }
 
+// Starts application
 func (a Application) Start() error {
-	return http.ListenAndServe(":7777", a.router)
+	return http.ListenAndServe(a.config.Host+":"+a.config.Port, a.router)
 }
 
 func (a *Application) setupHTTP() {

@@ -2,16 +2,27 @@ package model
 
 import "time"
 
-// To get assets for user you get this class from db
+// information about asset owned by user
 type UserAsset struct {
-	Username  string  `json:"username,omitempty"`
-	AssetId   string  `json:"assetId"`
-	Name      string  `json:"name"`
-	Quantity  float64 `json:"quantity"`
+	//username
+	Username string `json:"username,omitempty"`
+
+	// asset id
+	AssetId string `json:"assetId"`
+
+	//asset name
+	Name string `json:"name"`
+
+	//quantity of asset owned by user
+	Quantity float64 `json:"quantity"`
+
+	// the usd value of the quantity if sold now
 	Valuation float64 `json:"valuation"`
+
 	// TODO : add usdSpent, usdEarned
 }
 
+// information about a specific asset purchase - receipt
 type Acquisition struct {
 	Username string    `json:"username"`
 	AssetId  string    `json:"assetId"`
