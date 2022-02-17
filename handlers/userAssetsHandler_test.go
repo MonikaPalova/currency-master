@@ -18,12 +18,12 @@ type mockUserAssetsSvc struct {
 	mock.Mock
 }
 
-func (m mockUserAssetsSvc) GetByUsername(username string) ([]model.UserAsset, error) {
+func (m *mockUserAssetsSvc) GetByUsername(username string) ([]model.UserAsset, error) {
 	args := m.Called(username)
 	return args.Get(0).([]model.UserAsset), args.Error(1)
 }
 
-func (m mockUserAssetsSvc) GetByUsernameAndId(username, id string) (*model.UserAsset, error) {
+func (m *mockUserAssetsSvc) GetByUsernameAndId(username, id string) (*model.UserAsset, error) {
 	args := m.Called(username, id)
 	if args.Get(0) != nil {
 		return args.Get(0).(*model.UserAsset), args.Error(1)
@@ -31,17 +31,17 @@ func (m mockUserAssetsSvc) GetByUsernameAndId(username, id string) (*model.UserA
 	return nil, args.Error(1)
 }
 
-func (m mockUserAssetsSvc) Create(asset model.UserAsset) (*model.UserAsset, error) {
+func (m *mockUserAssetsSvc) Create(asset model.UserAsset) (*model.UserAsset, error) {
 	args := m.Called(asset)
 	return args.Get(0).(*model.UserAsset), args.Error(1)
 }
 
-func (m mockUserAssetsSvc) Update(asset model.UserAsset) (*model.UserAsset, error) {
+func (m *mockUserAssetsSvc) Update(asset model.UserAsset) (*model.UserAsset, error) {
 	args := m.Called(asset)
 	return args.Get(0).(*model.UserAsset), args.Error(1)
 }
 
-func (m mockUserAssetsSvc) Delete(asset model.UserAsset) error {
+func (m *mockUserAssetsSvc) Delete(asset model.UserAsset) error {
 	args := m.Called(asset)
 	return args.Error(0)
 }

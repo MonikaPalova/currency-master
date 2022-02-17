@@ -15,12 +15,12 @@ type mockAssetsSvc struct {
 	mock.Mock
 }
 
-func (m mockAssetsSvc) GetAssetPage(page, size int) (*coinapi.AssetPage, error) {
+func (m *mockAssetsSvc) GetAssetPage(page, size int) (*coinapi.AssetPage, error) {
 	args := m.Called(page, size)
 	return args.Get(0).(*coinapi.AssetPage), args.Error(1)
 }
 
-func (m mockAssetsSvc) GetAssetById(id string) (*coinapi.Asset, error) {
+func (m *mockAssetsSvc) GetAssetById(id string) (*coinapi.Asset, error) {
 	args := m.Called(id)
 	if args.Get(0) != nil {
 		return args.Get(0).(*coinapi.Asset), args.Error(1)

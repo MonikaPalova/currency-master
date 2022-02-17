@@ -58,7 +58,7 @@ func (u UsersHandler) Post(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Printf("Created new user %s", user.Username)
-	w.Write(jsonResponse)
+	utils.RespondWithOK(w,jsonResponse)
 }
 
 // handles get users request
@@ -75,7 +75,7 @@ func (u UsersHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Printf("Retrieved all users with valuation")
-	w.Write(jsonResponse)
+	utils.RespondWithOK(w,jsonResponse)
 }
 
 // get specific user
@@ -97,5 +97,5 @@ func (u UsersHandler) GetByUsername(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Printf("Retrieved user %s with valuation", username)
-	w.Write(jsonResponse)
+	utils.RespondWithOK(w,jsonResponse)
 }

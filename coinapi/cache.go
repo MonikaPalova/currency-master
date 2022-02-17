@@ -15,7 +15,7 @@ type Cache struct {
 
 // Cache constructor.
 func NewCache() *Cache {
-	return &Cache{assets: []Asset{}, ids: map[string]int{}, expires: time.Now()}
+	return &Cache{assets: []Asset{}, ids: map[string]int{}, expires: time.Now().Add(-time.Hour)}
 }
 
 // Clears cache and adds assets.

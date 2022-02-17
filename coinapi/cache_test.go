@@ -99,7 +99,7 @@ func TestCache_GetAsset(t *testing.T) {
 		{"get existing asset", fields{[]Asset{{ID: "id1"}}, map[string]int{"id1": 0}, time.Now().Add(time.Hour * 1)}, args{"id1"}, &Asset{ID: "id1"}},
 		{"get not existing asset", fields{[]Asset{{ID: "id1"}}, map[string]int{"id1": 0}, time.Now().Add(time.Hour * 1)}, args{"id2"}, nil},
 		{"get not existing asset empty cache", fields{[]Asset{}, map[string]int{}, time.Now().Add(time.Hour * 1)}, args{"id1"}, nil},
-		{"expired cache", fields{[]Asset{{ID: "id1"}}, map[string]int{"id1": 0}, time.Now()}, args{"id1"}, nil},
+		{"expired cache", fields{[]Asset{{ID: "id1"}}, map[string]int{"id1": 0}, time.Now().Add(-time.Hour * 1)}, args{"id1"}, nil},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

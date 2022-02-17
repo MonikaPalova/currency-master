@@ -19,17 +19,17 @@ type mockAcqDB struct {
 	mock.Mock
 }
 
-func (m mockAcqDB) GetAll() ([]model.Acquisition, error) {
+func (m *mockAcqDB) GetAll() ([]model.Acquisition, error) {
 	args := m.Called()
 	return args.Get(0).([]model.Acquisition), args.Error(1)
 }
 
-func (m mockAcqDB) GetByUsername(username string) ([]model.Acquisition, error) {
+func (m *mockAcqDB) GetByUsername(username string) ([]model.Acquisition, error) {
 	args := m.Called(username)
 	return args.Get(0).([]model.Acquisition), args.Error(1)
 }
 
-func (m mockAcqDB) Create(acq model.Acquisition) (*model.Acquisition, error) {
+func (m *mockAcqDB) Create(acq model.Acquisition) (*model.Acquisition, error) {
 	args := m.Called(acq)
 	return args.Get(0).(*model.Acquisition), args.Error(1)
 }

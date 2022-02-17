@@ -41,7 +41,7 @@ func (s stubUaDB) Delete(asset model.UserAsset) error {
 	return s.err
 }
 
-func TestUsers_GetAssetsByUsername(t *testing.T) {
+func TestUserAssets_GetAssetsByUsername(t *testing.T) {
 	type fields struct {
 		UaDB   userAssetsDB
 		client coinAPIClient
@@ -79,7 +79,7 @@ func TestUsers_GetAssetsByUsername(t *testing.T) {
 	}
 }
 
-func TestUsers_GetAssetByUsernameAndId(t *testing.T) {
+func TestUserAssets_GetAssetByUsernameAndId(t *testing.T) {
 	type fields struct {
 		UaDB   userAssetsDB
 		client coinAPIClient
@@ -120,7 +120,7 @@ func TestUsers_GetAssetByUsernameAndId(t *testing.T) {
 	}
 }
 
-func TestUsers_CreateAsset(t *testing.T) {
+func TestUserAssets_CreateAsset(t *testing.T) {
 	type fields struct {
 		UaDB userAssetsDB
 	}
@@ -153,7 +153,7 @@ func TestUsers_CreateAsset(t *testing.T) {
 	}
 }
 
-func TestUsers_DeleteAsset(t *testing.T) {
+func TestUserAssets_DeleteAsset(t *testing.T) {
 	type fields struct {
 		UaDB userAssetsDB
 	}
@@ -180,7 +180,7 @@ func TestUsers_DeleteAsset(t *testing.T) {
 	}
 }
 
-func TestUsers_UpdateAsset(t *testing.T) {
+func TestUserAssets_UpdateAsset(t *testing.T) {
 	type fields struct {
 		UaDB userAssetsDB
 	}

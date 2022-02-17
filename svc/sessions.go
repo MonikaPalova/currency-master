@@ -52,7 +52,7 @@ func (s Sessions) CreateCookie(username string) *http.Cookie {
 func (s Sessions) Delete(id string) {
 	session, ok := s.sessions[id]
 	if ok {
-		session.Expiration = time.Now()
+		session.Expiration = time.Now().Add(-time.Hour)
 		s.sessions[id] = session
 	}
 	log.Printf("Invalidated session with id %s", id)

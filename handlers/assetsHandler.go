@@ -16,6 +16,8 @@ import (
 const (
 	defaultPage = 1
 	defaultSize = 10
+
+	maxSize = 50
 )
 
 // Assets API handler.
@@ -40,6 +42,11 @@ func (a AssetsHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if size > maxSize {
+		log.Printf("Invalid size passed for get all assets: size %d, max is %d, defaulting to max", size, maxSize)
+		size = maxSize
+	}
+
 	assetsPage, err := a.Svc.GetAssetPage(page, size)
 	if err != nil {
 		utils.RespondWithError(w, http.StatusInternalServerError, err, "Could not retrieve assets from external api")
@@ -52,7 +59,7 @@ func (a AssetsHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Printf("Successfuly retrieved page %d with size %d of assets", page, size)
-	w.Write(jsonResponse)
+	utils.RespondWithOK(w, jsonResponse)
 }
 
 func getQueryParam(actual string, defaultValue int) int {
@@ -83,5 +90,5 @@ func (a AssetsHandler) GetById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Printf("Successfully retrieved asset with id %s", asset.ID)
-	w.Write(jsonResponse)
+	utils.RespondWithOK(w, jsonResponse)
 }

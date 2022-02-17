@@ -46,5 +46,5 @@ func (a AcquisitionsHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Println("Successfuly retrieved acquistions")
-	w.Write(jsonResponse)
+	utils.RespondWithOK(w, jsonResponse)
 }

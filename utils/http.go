@@ -24,3 +24,9 @@ func RespondWithError(w http.ResponseWriter, statusCode int, err error, msg stri
 		w.Write([]byte(errMsg))
 	}
 }
+
+// writes ok response to writer
+func RespondWithOK(w http.ResponseWriter, jsonResponse []byte) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonResponse)
+}

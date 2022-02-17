@@ -16,27 +16,27 @@ type mockUsersSvc struct {
 	mock.Mock
 }
 
-func (m mockUsersSvc) Create(user model.User) (*model.User, error) {
+func (m *mockUsersSvc) Create(user model.User) (*model.User, error) {
 	args := m.Called(user)
 	return args.Get(0).(*model.User), args.Error(1)
 }
 
-func (m mockUsersSvc) GetAll() ([]model.User, error) {
+func (m *mockUsersSvc) GetAll() ([]model.User, error) {
 	args := m.Called()
 	return args.Get(0).([]model.User), args.Error(1)
 }
 
-func (m mockUsersSvc) GetByUsername(username string, valuation bool) (user *model.User, err error) {
+func (m *mockUsersSvc) GetByUsername(username string, valuation bool) (user *model.User, err error) {
 	args := m.Called(username, valuation)
 	return args.Get(0).(*model.User), args.Error(1)
 }
 
-func (m mockUsersSvc) AddUSD(username string, usd float64) (float64, error) {
+func (m *mockUsersSvc) AddUSD(username string, usd float64) (float64, error) {
 	args := m.Called(username, usd)
 	return args.Get(0).(float64), args.Error(1)
 }
 
-func (m mockUsersSvc) DeductUSD(username string, usd float64) (float64, error) {
+func (m *mockUsersSvc) DeductUSD(username string, usd float64) (float64, error) {
 	args := m.Called(username, usd)
 	return args.Get(0).(float64), args.Error(1)
 }

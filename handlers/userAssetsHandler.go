@@ -58,7 +58,7 @@ func (u UserAssetsHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Printf("Successfully retrieved all user assets for user %s", username)
-	w.Write(jsonResponse)
+	utils.RespondWithOK(w,jsonResponse)
 }
 
 // gets user asset of user by asset id
@@ -81,7 +81,7 @@ func (u UserAssetsHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Printf("Successfuly got user asset for user %s with asset id %s", username, id)
-	w.Write(jsonResponse)
+	utils.RespondWithOK(w,jsonResponse)
 }
 
 // Buys asset for user with the given quantity
@@ -169,7 +169,7 @@ func (u UserAssetsHandler) Buy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Printf("User %s successfully bought %f of asset with id %s", operation.username, operation.quantity, operation.assetId)
-	w.Write(jsonResponse)
+	utils.RespondWithOK(w,jsonResponse)
 }
 
 // Sells the given quantity of an asset owned by user
@@ -242,7 +242,7 @@ func (u UserAssetsHandler) Sell(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Printf("User %s successfully sold %f of asset with id %s", operation.username, operation.quantity, operation.assetId)
-	w.Write(jsonResponse)
+	utils.RespondWithOK(w,jsonResponse)
 }
 
 func getOperation(r *http.Request) (*userAssetOperation, error) {

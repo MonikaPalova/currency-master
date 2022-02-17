@@ -37,12 +37,12 @@ func (a AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 	http.SetCookie(w, cookie)
 	log.Printf("User %s successfully logged in", username)
-	w.Write([]byte("Login successful!"))
+	http.RespondWithOK([]byte("Login successful!"))
 }
 
 func (a AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	sessionCookie, _ := r.Cookie(a.SSvc.Config.SessionCookieName)
 	a.SSvc.Delete(sessionCookie.Value)
 
-	w.Write([]byte("Logged out successfully"))
+	http.RespondWithOK([]byte("Logged out successfully"))
 }
