@@ -1,3 +1,4 @@
+// package config keeps types of configs used in the application
 package config
 
 import "time"
@@ -60,19 +61,16 @@ func NewApp() *App {
 }
 
 const (
-	sessionIDLength    = 64
-	sessionDuration    = time.Hour
-	sessionCookieName  = "CURRENCY-MASTER-SESSION-ID"
-	usernameCookieName = "CURRENCY-MASTER-USERNAME"
+	sessionDuration   = time.Hour
+	sessionCookieName = "CURRENCY-MASTER-SESSION-ID"
 )
 
+// Session configuration
 type Session struct {
-	SessionIDLength    int
-	SessionDuration    time.Duration
-	SessionCookieName  string
-	UsernameCookieName string
+	SessionDuration   time.Duration
+	SessionCookieName string
 }
 
 func NewSession() *Session {
-	return &Session{SessionIDLength: sessionIDLength, SessionDuration: sessionDuration, SessionCookieName: sessionCookieName, UsernameCookieName: usernameCookieName}
+	return &Session{SessionDuration: sessionDuration, SessionCookieName: sessionCookieName}
 }

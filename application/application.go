@@ -1,3 +1,4 @@
+// Package application setups the application
 package application
 
 import (

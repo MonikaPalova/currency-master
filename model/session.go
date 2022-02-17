@@ -1,3 +1,4 @@
+// Package model contains structs that represent object created by the application
 package model
 
 import "time"

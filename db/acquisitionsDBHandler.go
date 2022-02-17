@@ -1,3 +1,4 @@
+// Package db handles communication with the database
 package db
 
 import (
@@ -13,12 +14,13 @@ const (
 	insertAcquisition            = "INSERT INTO ACQUISITIONS (username, asset_id, price_usd, quantity, created) VALUES (?, ?, ?, ?, ?);"
 )
 
-// Handles sql operations to ACQUISITIONS table
+// Handles sql operations to ACQUISITIONS table.
 type AcquisitionsDBHandler struct {
 	conn *sql.DB
 }
 
-// gets all acquisitions
+// Gets all acquisitions.
+// Returns error on database query error
 func (a AcquisitionsDBHandler) GetAll() ([]model.Acquisition, error) {
 	rows, err := a.conn.Query(selectAcquisitions)
 	if err != nil {
@@ -28,7 +30,8 @@ func (a AcquisitionsDBHandler) GetAll() ([]model.Acquisition, error) {
 	return deserializeAcquisitions(rows)
 }
 
-// get all acquisitions of user
+// Gets all acquisitions of user.
+// Returns error on database query error
 func (a AcquisitionsDBHandler) GetByUsername(username string) ([]model.Acquisition, error) {
 	rows, err := a.conn.Query(selectAcquisitionsByUsername, username)
 	if err != nil {
@@ -51,7 +54,8 @@ func deserializeAcquisitions(rows *sql.Rows) ([]model.Acquisition, error) {
 	return acqs, nil
 }
 
-// saves a new acquisition to the database
+// Saves a new acquisition to the database
+// Returns error on database query error
 func (a AcquisitionsDBHandler) Create(acq model.Acquisition) (*model.Acquisition, error) {
 	insertStmt, err := a.conn.Prepare(insertAcquisition)
 	if err != nil {

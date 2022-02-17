@@ -1,3 +1,4 @@
+// Package coinapi handles communication with external api and manages assets cache
 package coinapi
 
 import (

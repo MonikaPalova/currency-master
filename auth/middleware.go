@@ -1,3 +1,4 @@
+// Package auth handles authentication middleware
 package auth
 
 import (
@@ -19,6 +20,7 @@ type SessionAuth struct {
 	Svc    *svc.Sessions
 }
 
+// Prodvides Middleware function for authentication
 func (s SessionAuth) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		sessionCookie, err := r.Cookie(s.Config.SessionCookieName)
@@ -38,6 +40,7 @@ func (s SessionAuth) Middleware(next http.Handler) http.Handler {
 	})
 }
 
+// Retrieves user from request context
 func GetUser(r *http.Request) string {
-	return r.Context().Value("caller").(string)
+	return r.Context().Value(callerCtxKey).(string)
 }

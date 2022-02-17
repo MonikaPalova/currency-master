@@ -1,3 +1,4 @@
+// Package utils contains helper methods
 package utils
 
 import (

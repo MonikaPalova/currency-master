@@ -5,16 +5,18 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/MonikaPalova/currency-master/auth"
 	"github.com/MonikaPalova/currency-master/svc"
 	"github.com/MonikaPalova/currency-master/utils"
 )
 
+// Authentication handler.
 type AuthHandler struct {
 	USvc *svc.Users
 	SSvc *svc.Sessions
 }
 
+// Logs user in
+// Returns error if no Basic Header is provider or user is invalid
 func (a AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	username, pass, ok := r.BasicAuth()
 	if !ok {
@@ -40,6 +42,7 @@ func (a AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
-	user := auth.GetUser(r)
-	fmt.Println(user)
+	cookie := r.Header["Cookie"]
+	fmt.Println(cookie)
+	// TODO
 }

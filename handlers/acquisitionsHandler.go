@@ -2,13 +2,14 @@ package handlers
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"github.com/MonikaPalova/currency-master/model"
 	"github.com/MonikaPalova/currency-master/utils"
 )
 
-// acquisitions API
+// Acquisitions API handler.
 type AcquisitionsHandler struct {
 	DB acqDB
 }
@@ -22,7 +23,7 @@ type acqDB interface {
 	Create(acq model.Acquisition) (*model.Acquisition, error)
 }
 
-// handles get all acquisitions request and applies username filter if needed
+// Handles get all acquisitions request and applies username filter if specified.
 func (a AcquisitionsHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	queryParams := r.URL.Query()
 	username := queryParams.Get("username")
@@ -44,5 +45,6 @@ func (a AcquisitionsHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 		utils.RespondWithError(w, http.StatusInternalServerError, err, "could not convert acquisitions to JSON")
 		return
 	}
+	log.Println("Successfuly retrieved acquistions")
 	w.Write(jsonResponse)
 }

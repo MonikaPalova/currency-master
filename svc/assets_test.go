@@ -1,3 +1,4 @@
+// Package svc contains services that prepare data for the handlers
 package svc
 
 import (

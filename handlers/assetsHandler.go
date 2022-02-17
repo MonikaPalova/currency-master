@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -17,7 +18,7 @@ const (
 	defaultSize = 10
 )
 
-// assets API
+// Assets API handler.
 type AssetsHandler struct {
 	Svc assetsSvc
 }
@@ -27,13 +28,14 @@ type assetsSvc interface {
 	GetAssetById(id string) (*coinapi.Asset, error)
 }
 
-// gets a page of assets
+// Gets a page of assets.
 func (a AssetsHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	queryParams := r.URL.Query()
 	page := getQueryParam(queryParams.Get("page"), defaultPage)
 	size := getQueryParam(queryParams.Get("size"), defaultSize)
 
 	if page <= 0 || size <= 0 {
+		log.Printf("Invalid page and size passed for get all assets, page %d, size %d", page, size)
 		utils.RespondWithError(w, http.StatusBadRequest, nil, "page and size must be specified and positive numbers")
 		return
 	}
@@ -49,6 +51,7 @@ func (a AssetsHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 		utils.RespondWithError(w, http.StatusInternalServerError, err, "Could not convert assets to JSON")
 		return
 	}
+	log.Printf("Successfuly retrieved page %d with size %d of assets", page, size)
 	w.Write(jsonResponse)
 }
 
@@ -61,7 +64,7 @@ func getQueryParam(actual string, defaultValue int) int {
 	}
 }
 
-// gets asset by id
+// Gets asset by id.
 func (a AssetsHandler) GetById(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 	asset, err := a.Svc.GetAssetById(id)
@@ -79,5 +82,6 @@ func (a AssetsHandler) GetById(w http.ResponseWriter, r *http.Request) {
 		utils.RespondWithError(w, http.StatusInternalServerError, err, "Couldn not convert asset to JSON")
 		return
 	}
+	log.Printf("Successfully retrieved asset with id %s", asset.ID)
 	w.Write(jsonResponse)
 }

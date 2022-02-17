@@ -18,7 +18,7 @@ const (
 	existsUser                    = "SELECT COUNT(1) FROM USERS WHERE username=? AND password=?;"
 )
 
-// Handles sql operations to USERS table
+// Handles sql operations to USERS table.
 type UsersDBHandler struct {
 	conn *sql.DB
 }
@@ -30,7 +30,10 @@ type userAsset struct {
 	quantity sql.NullFloat64
 }
 
-// saves new user in database
+// Saves new user in database.
+// Returns same user with blank password and empty assets array, if successful.
+// Returns nil user if user already exists.
+// Returns error on database query error
 func (u UsersDBHandler) Create(user model.User) (*model.User, error) {
 	insertStmt, err := u.conn.Prepare(insertUser)
 	if err != nil {
@@ -49,7 +52,8 @@ func (u UsersDBHandler) Create(user model.User) (*model.User, error) {
 	return &user, nil
 }
 
-// gets all users
+// Gets all users.
+// Returns error on database query error
 func (u UsersDBHandler) GetAll() ([]model.User, error) {
 	rows, err := u.conn.Query(selectUserAndAssets)
 	if err != nil {
@@ -58,7 +62,9 @@ func (u UsersDBHandler) GetAll() ([]model.User, error) {
 	return deserializeUsers(rows)
 }
 
-// gets user with user assets information
+// Gets user with user assets array filled.
+// Returns nil user if user does not exist
+// Returns error on database query error
 func (u UsersDBHandler) GetByUsernameWithAssets(username string) (*model.User, error) {
 	rows, err := u.conn.Query(selectUserAndAssetsByUsername, username)
 	if err != nil {
@@ -104,7 +110,9 @@ func deserializeUsers(rows *sql.Rows) ([]model.User, error) {
 	return users, nil
 }
 
-// gets user without user assets information
+// Gets user without user assets information.
+// Returns nil user if not exists
+// Returns error on database query error
 func (u UsersDBHandler) GetByUsername(username string) (*model.User, error) {
 	row := u.conn.QueryRow(selectUser, username)
 
@@ -119,7 +127,8 @@ func (u UsersDBHandler) GetByUsername(username string) (*model.User, error) {
 	return &user, nil
 }
 
-// updates usd value of a user
+// Updates usd value of a user.
+// Returns error on database query error
 func (u UsersDBHandler) UpdateUSD(username string, money float64) error {
 	updateStmt, err := u.conn.Prepare(updateUserUSD)
 	if err != nil {
@@ -138,6 +147,8 @@ func (u UsersDBHandler) UpdateUSD(username string, money float64) error {
 	return nil
 }
 
+// Checks if user with this username and password exists in the database
+// Returns error on database query error
 func (u UsersDBHandler) Exists(username, password string) (bool, error) {
 	row := u.conn.QueryRow(existsUser, username, password)
 

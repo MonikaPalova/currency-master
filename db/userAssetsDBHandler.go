@@ -17,12 +17,13 @@ const (
 	deleteAsset                 = "DELETE FROM USER_ASSETS WHERE username=? AND asset_id=?;"
 )
 
-// Handles sql operations to USER_ASSETS table
+// Handles sql operations to USER_ASSETS table.
 type UserAssetsDBHandler struct {
 	conn *sql.DB
 }
 
-// gets all user assets owned by user
+// Gets all user assets owned by user without valuation.
+// Returns error on database query error
 func (u UserAssetsDBHandler) GetByUsername(username string) ([]model.UserAsset, error) {
 	rows, err := u.conn.Query(selectAssetsByUsername, username)
 	if err != nil {
@@ -46,7 +47,9 @@ func deserializeUserAssets(rows *sql.Rows) ([]model.UserAsset, error) {
 	return assets, nil
 }
 
-// gets user asset owned by user for asset with specific id, if exists
+// Gets user asset owned by user for asset with specific id.
+// Returns nil if user asset does not exist
+// Returns error on database query error
 func (u UserAssetsDBHandler) GetByUsernameAndId(username, id string) (*model.UserAsset, error) {
 	row := u.conn.QueryRow(selectAssetsByUsernameAndId, username, id)
 
@@ -61,7 +64,9 @@ func (u UserAssetsDBHandler) GetByUsernameAndId(username, id string) (*model.Use
 	return &asset, nil
 }
 
-// saves a new user asset in the database
+// Saves a new user asset in the database.
+// Returns error if username is taken or user already has user asset with this asset id.
+// Returns error on database query error.
 func (u UserAssetsDBHandler) Create(asset model.UserAsset) (*model.UserAsset, error) {
 	insertStmt, err := u.conn.Prepare(insertAsset)
 	if err != nil {
@@ -81,7 +86,8 @@ func (u UserAssetsDBHandler) Create(asset model.UserAsset) (*model.UserAsset, er
 	return &asset, nil
 }
 
-// updates the quantity of an existing user asset
+// Updates the quantity of an existing user asset
+// Returns error on database query error
 func (u UserAssetsDBHandler) Update(asset model.UserAsset) (*model.UserAsset, error) {
 	updateStmt, err := u.conn.Prepare(updateAsset)
 	if err != nil {
@@ -101,7 +107,8 @@ func (u UserAssetsDBHandler) Update(asset model.UserAsset) (*model.UserAsset, er
 	return &asset, nil
 }
 
-// deletes an existing user asset
+// Deletes an existing user asset
+// Returns error on database query error
 func (u UserAssetsDBHandler) Delete(asset model.UserAsset) error {
 	deleteStmt, err := u.conn.Prepare(deleteAsset)
 	if err != nil {
