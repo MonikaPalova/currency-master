@@ -1,5 +1,5 @@
-// Package utils contains helper methods
-package utils
+// Package httputils contains helper methods
+package httputils
 
 import (
 	"fmt"

@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/MonikaPalova/currency-master/model"
-	"github.com/MonikaPalova/currency-master/utils"
+	"github.com/MonikaPalova/currency-master/httputils"
 )
 
 // Acquisitions API handler.
@@ -36,15 +36,15 @@ func (a AcquisitionsHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 		acqs, err = a.DB.GetAll()
 	}
 	if err != nil {
-		utils.RespondWithError(w, http.StatusInternalServerError, err, "could not retrieve acquisitions from database")
+		httputils.RespondWithError(w, http.StatusInternalServerError, err, "could not retrieve acquisitions from database")
 		return
 	}
 
 	jsonResponse, err := json.Marshal(acqs)
 	if err != nil {
-		utils.RespondWithError(w, http.StatusInternalServerError, err, "could not convert acquisitions to JSON")
+		httputils.RespondWithError(w, http.StatusInternalServerError, err, "could not convert acquisitions to JSON")
 		return
 	}
 	log.Println("Successfuly retrieved acquistions")
-	utils.RespondWithOK(w, jsonResponse)
+	httputils.RespondWithOK(w, jsonResponse)
 }

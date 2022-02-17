@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/MonikaPalova/currency-master/svc"
-	"github.com/MonikaPalova/currency-master/utils"
+	"github.com/MonikaPalova/currency-master/httputils"
 )
 
 // Authentication handler.
@@ -19,17 +19,17 @@ type AuthHandler struct {
 func (a AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	username, pass, ok := r.BasicAuth()
 	if !ok {
-		utils.RespondWithError(w, http.StatusBadRequest, nil, "Basic Authentication header was not provided")
+		httputils.RespondWithError(w, http.StatusBadRequest, nil, "Basic Authentication header was not provided")
 		return
 	}
 
 	valid, err := a.USvc.ValidateUser(username, pass)
 	if err != nil {
-		utils.RespondWithError(w, http.StatusInternalServerError, err, "error occured while validating user credentials in db")
+		httputils.RespondWithError(w, http.StatusInternalServerError, err, "error occured while validating user credentials in db")
 		return
 	}
 	if !valid {
-		utils.RespondWithError(w, http.StatusUnauthorized, nil, "provided credentials are not valid")
+		httputils.RespondWithError(w, http.StatusUnauthorized, nil, "provided credentials are not valid")
 		return
 	}
 
@@ -37,12 +37,12 @@ func (a AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 	http.SetCookie(w, cookie)
 	log.Printf("User %s successfully logged in", username)
-	http.RespondWithOK([]byte("Login successful!"))
+	w.Write([]byte("Login successful!"))
 }
 
 func (a AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	sessionCookie, _ := r.Cookie(a.SSvc.Config.SessionCookieName)
 	a.SSvc.Delete(sessionCookie.Value)
 
-	http.RespondWithOK([]byte("Logged out successfully"))
+	w.Write([]byte("Logged out successfully"))
 }
