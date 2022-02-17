@@ -46,6 +46,7 @@ func (a *Application) initDB() {
 
 // Starts application
 func (a Application) Start() error {
+	log.Println("Starting application...")
 	return http.ListenAndServe(a.config.Host+":"+a.config.Port, a.router)
 }
 

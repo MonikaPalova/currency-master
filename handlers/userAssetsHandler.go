@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -56,6 +57,7 @@ func (u UserAssetsHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 		utils.RespondWithError(w, http.StatusInternalServerError, err, "could not convert user assets to JSON")
 		return
 	}
+	log.Printf("Successfully retrieved all user assets for user %s", username)
 	w.Write(jsonResponse)
 }
 
@@ -78,10 +80,11 @@ func (u UserAssetsHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 		utils.RespondWithError(w, http.StatusInternalServerError, err, "Could not convert user asset to JSON")
 		return
 	}
+	log.Printf("Successfuly got user asset for user %s with asset id %s", username, id)
 	w.Write(jsonResponse)
 }
 
-// buys asset for user with the given quantity
+// Buys asset for user with the given quantity
 func (u UserAssetsHandler) Buy(w http.ResponseWriter, r *http.Request) {
 	operation, err := getOperation(r)
 	if err != nil {
@@ -133,6 +136,7 @@ func (u UserAssetsHandler) Buy(w http.ResponseWriter, r *http.Request) {
 			utils.RespondWithError(w, http.StatusInternalServerError, err, "Could not create new user asset in database")
 			return
 		}
+		log.Printf("Created new user asset, username %s, asset id %s, quantity %f", userAsset.Username, userAsset.AssetId, userAsset.Quantity)
 	} else {
 		userAsset.Quantity += operation.quantity
 		_, err = u.UaSvc.Update(*userAsset)
@@ -140,6 +144,7 @@ func (u UserAssetsHandler) Buy(w http.ResponseWriter, r *http.Request) {
 			utils.RespondWithError(w, http.StatusInternalServerError, err, "Could not update asset in database")
 			return
 		}
+		log.Printf("Updated existing user asset's quantity, username %s, asset id %s, new quantity %f", userAsset.Username, userAsset.AssetId, userAsset.Quantity)
 	}
 
 	paid := operation.quantity * asset.PriceUSD
@@ -148,6 +153,7 @@ func (u UserAssetsHandler) Buy(w http.ResponseWriter, r *http.Request) {
 		utils.RespondWithError(w, http.StatusInternalServerError, err, "Could not update user in database")
 		return
 	}
+	log.Printf("Deducted %f usd from user %s", paid, operation.username)
 
 	acq := model.Acquisition{Username: operation.username, AssetId: operation.assetId, Quantity: operation.quantity, PriceUSD: asset.PriceUSD, TotalUSD: paid, Created: time.Now().UTC()}
 	createdAcq, err := u.ADB.Create(acq)
@@ -155,16 +161,18 @@ func (u UserAssetsHandler) Buy(w http.ResponseWriter, r *http.Request) {
 		utils.RespondWithError(w, http.StatusInternalServerError, err, "Could not save acquisition in database")
 		return
 	}
+	log.Printf("created new acquisition, username %s, asset id %s, created %v, quantity %f", acq.Username, acq.AssetId, acq.Created, acq.Quantity)
 
 	jsonResponse, err := json.Marshal(createdAcq)
 	if err != nil {
 		utils.RespondWithError(w, http.StatusInternalServerError, err, "Could not convert acquisition response to JSON")
 		return
 	}
+	log.Printf("User %s successfully bought %f of asset with id %s", operation.username, operation.quantity, operation.assetId)
 	w.Write(jsonResponse)
 }
 
-// sells the given quantity of an asset owned by user
+// Sells the given quantity of an asset owned by user
 func (u UserAssetsHandler) Sell(w http.ResponseWriter, r *http.Request) {
 	operation, err := getOperation(r)
 	if err != nil {
@@ -209,12 +217,14 @@ func (u UserAssetsHandler) Sell(w http.ResponseWriter, r *http.Request) {
 			utils.RespondWithError(w, http.StatusInternalServerError, err, "Could not delete asset from database")
 			return
 		}
+		log.Printf("Deleted user asset, username %s, asset id %s", userAsset.Username, userAsset.AssetId)
 	} else {
 		userAsset, err = u.UaSvc.Update(*userAsset)
 		if err != nil {
 			utils.RespondWithError(w, http.StatusInternalServerError, err, "Could not update asset in database")
 			return
 		}
+		log.Printf("Updated existing user asset's quantity, username %s, asset id %s, new quantity %f", userAsset.Username, userAsset.AssetId, userAsset.Quantity)
 	}
 
 	earned := operation.quantity * asset.PriceUSD
@@ -223,6 +233,7 @@ func (u UserAssetsHandler) Sell(w http.ResponseWriter, r *http.Request) {
 		utils.RespondWithError(w, http.StatusInternalServerError, err, "Could not update user in database")
 		return
 	}
+	log.Printf("Added %f usd from user %s, new balance %f", earned, operation.username, balance)
 
 	operationResponse := userAssetOperationResponse{Username: operation.username, AssetId: operation.assetId, Quantity: userAsset.Quantity, Balance: balance}
 	jsonResponse, err := json.Marshal(operationResponse)
@@ -230,6 +241,7 @@ func (u UserAssetsHandler) Sell(w http.ResponseWriter, r *http.Request) {
 		utils.RespondWithError(w, http.StatusInternalServerError, err, "Could not convert sell operation response to JSON")
 		return
 	}
+	log.Printf("User %s successfully sold %f of asset with id %s", operation.username, operation.quantity, operation.assetId)
 	w.Write(jsonResponse)
 }
 

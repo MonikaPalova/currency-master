@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/MonikaPalova/currency-master/model"
@@ -56,6 +57,7 @@ func (u UsersHandler) Post(w http.ResponseWriter, r *http.Request) {
 		utils.RespondWithError(w, http.StatusInternalServerError, err, "could not convert created user to JSON. Probably it was malformed")
 		return
 	}
+	log.Printf("Created new user %s", user.Username)
 	w.Write(jsonResponse)
 }
 
@@ -72,6 +74,7 @@ func (u UsersHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 		utils.RespondWithError(w, http.StatusInternalServerError, err, "could not convert users to JSON")
 		return
 	}
+	log.Printf("Retrieved all users with valuation")
 	w.Write(jsonResponse)
 }
 
@@ -93,5 +96,6 @@ func (u UsersHandler) GetByUsername(w http.ResponseWriter, r *http.Request) {
 		utils.RespondWithError(w, http.StatusInternalServerError, err, "Could not convert user to JSON")
 		return
 	}
+	log.Printf("Retrieved user %s with valuation", username)
 	w.Write(jsonResponse)
 }

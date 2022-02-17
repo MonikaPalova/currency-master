@@ -2,6 +2,7 @@ package svc
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -44,6 +45,7 @@ func (s Sessions) CreateCookie(username string) *http.Cookie {
 }
 
 func (s Sessions) ClearExpired() {
+	old := len(s.sessions)
 	validSessions := map[string]model.Session{}
 	for _, session := range s.sessions {
 		if !session.IsExpired() {
@@ -51,4 +53,5 @@ func (s Sessions) ClearExpired() {
 		}
 	}
 	s.sessions = validSessions
+	log.Printf("Cleared expired sessions. Deleted: %d", old-len(s.sessions))
 }

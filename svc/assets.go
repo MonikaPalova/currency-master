@@ -2,12 +2,13 @@ package svc
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/MonikaPalova/currency-master/coinapi"
 	"github.com/MonikaPalova/currency-master/model"
 )
 
-// assets service which handles assets retrieval from cache and external api
+// Assets service which handles assets retrieval from cache and external api
 type Assets struct {
 	cache  *coinapi.Cache
 	client coinAPIClient
@@ -17,12 +18,12 @@ type coinAPIClient interface {
 	GetAssets() ([]coinapi.Asset, error)
 }
 
-// constructor
+// Constructor
 func NewAssets(client coinAPIClient) *Assets {
 	return &Assets{cache: coinapi.NewCache(), client: client}
 }
 
-// gets a specific asset page
+// Gets a specific asset page
 func (a Assets) GetAssetPage(page, size int) (*coinapi.AssetPage, error) {
 	if err := a.updateCacheIfNeeded(); err != nil {
 		return nil, err
@@ -32,7 +33,7 @@ func (a Assets) GetAssetPage(page, size int) (*coinapi.AssetPage, error) {
 	return &assetsPage, nil
 }
 
-// get specific asset by id
+// Get specific asset by id
 func (a Assets) GetAssetById(id string) (*coinapi.Asset, error) {
 	if err := a.updateCacheIfNeeded(); err != nil {
 		return nil, err
@@ -43,18 +44,18 @@ func (a Assets) GetAssetById(id string) (*coinapi.Asset, error) {
 
 func (a Assets) updateCacheIfNeeded() error {
 	if a.cache.IsExpired() {
-		fmt.Println("UPDATING CACHE")
 		assets, err := a.client.GetAssets()
 		if err != nil {
 			return fmt.Errorf("error retrieving assets from external api: %v", err)
 		}
 		a.cache.Fill(assets)
+		log.Println("Updated cache")
 	}
 
 	return nil
 }
 
-// calculates the gain if all quantity is sold now
+// Calculates the gain if all quantity is sold now
 func (a Assets) Valuate(ua model.UserAsset) (float64, error) {
 	asset, err := a.GetAssetById(ua.AssetId)
 	if err != nil {
