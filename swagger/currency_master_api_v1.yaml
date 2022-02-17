@@ -1,7 +1,11 @@
 openapi: 3.0.0
-title: "Currency Master APIs"
-description: "This API includes all requests related to currency master"
-version: "1.0.0"
+info:
+  title: "Currency Master APIs"
+  description: "This API includes all requests related to currency master"
+  version: "1.0.0"
+  externalDocs:
+    description: Gtihub repo
+    url: https://github.com/MonikaPalova/currency-master
 servers:
 - url: http://localhost:7777/api/v1
   description: Local server
