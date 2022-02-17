@@ -17,7 +17,7 @@ const (
 	deleteAsset                 = "DELETE FROM USER_ASSETS WHERE username=? AND asset_id=?;"
 )
 
-// Handles sql operations to  USER_ASSETS table
+// Handles sql operations to USER_ASSETS table
 type UserAssetsDBHandler struct {
 	conn *sql.DB
 }

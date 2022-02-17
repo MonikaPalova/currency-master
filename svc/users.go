@@ -3,7 +3,6 @@ package svc
 import (
 	"fmt"
 
-	"github.com/MonikaPalova/currency-master/db"
 	"github.com/MonikaPalova/currency-master/model"
 )
 
@@ -12,9 +11,17 @@ const startUserUSD = 100
 
 // users service to handle users, user assets and their valuation
 type Users struct {
-	ASvc *Assets
-	UDB  *db.UsersDBHandler
-	UaDB *db.UserAssetsDBHandler
+	UDB usersDB
+	v   valuator
+}
+
+type usersDB interface {
+	Create(user model.User) (*model.User, error)
+	GetAll() ([]model.User, error)
+	GetByUsername(username string) (*model.User, error)
+	GetByUsernameWithAssets(username string) (*model.User, error)
+	UpdateUSD(username string, money float64) error
+	Exists(username, password string) (bool, error)
 }
 
 // create a user
@@ -31,7 +38,7 @@ func (u Users) GetAll() ([]model.User, error) {
 	if err != nil {
 		return nil, err
 	}
-	return u.valUsers(users)
+	return u.v.valUsers(users)
 }
 
 // get user with or without valuation calculated
@@ -46,96 +53,14 @@ func (u Users) GetByUsername(username string, valuation bool) (user *model.User,
 		return user, err
 	}
 
-	return u.valUser(*user)
-}
-
-// get user assets owned by user with valuation
-func (u Users) GetAssetsByUsername(username string) ([]model.UserAsset, error) {
-	assets, err := u.UaDB.GetByUsername(username)
-	if err != nil {
-		return nil, err
-	}
-
-	_, assets, err = u.valAssets(assets)
-	return assets, err
-}
-
-// get specific user asset by id with valuation
-func (u Users) GetAssetByUsernameAndId(username, id string) (*model.UserAsset, error) {
-	asset, err := u.UaDB.GetByUsernameAndId(username, id)
-	if err != nil || asset == nil {
-		return asset, err
-	}
-
-	return u.valAsset(*asset)
-}
-
-func (u Users) valUsers(users []model.User) ([]model.User, error) {
-	valUsers := []model.User{}
-	for _, user := range users {
-		valUser, err := u.valUser(user)
-		if err != nil {
-			return nil, err
-		}
-		valUsers = append(valUsers, *valUser)
-	}
-	return valUsers, nil
-}
-
-func (u Users) valUser(user model.User) (*model.User, error) {
-	fmt.Println(fmt.Sprintf("Valuationg user %s with assets %v", user.Username, user.Assets))
-	valuation, valAssets, err := u.valAssets(user.Assets)
-	if err != nil {
-		return nil, err
-	}
-
-	user.Assets = valAssets
-	user.Valuation = valuation
-	return &user, nil
-}
-
-func (u Users) valAssets(assets []model.UserAsset) (float64, []model.UserAsset, error) {
-	valuation := 0.0
-	valAssets := []model.UserAsset{}
-	for _, asset := range assets {
-		valAsset, err := u.valAsset(asset)
-		if err != nil {
-			return -1, nil, err
-		}
-
-		valuation += valAsset.Valuation
-		valAssets = append(valAssets, *valAsset)
-	}
-
-	return valuation, valAssets, nil
-}
-
-func (u Users) valAsset(asset model.UserAsset) (*model.UserAsset, error) {
-	val, err := u.ASvc.Valuate(asset)
-	if err != nil {
-		return nil, err
-	}
-	asset.Valuation = val
-	return &asset, nil
-}
-
-// create new user asset
-func (u Users) CreateAsset(asset model.UserAsset) (*model.UserAsset, error) {
-	return u.UaDB.Create(asset)
-}
-
-//delete existing user asset
-func (u Users) DeleteAsset(asset model.UserAsset) error {
-	return u.UaDB.Delete(asset)
-}
-
-// update user asset
-func (u Users) UpdateAsset(asset model.UserAsset) (*model.UserAsset, error) {
-	return u.UaDB.Update(asset)
+	return u.v.valUser(*user)
 }
 
 // add usd to user balance
 func (u Users) AddUSD(username string, usd float64) (float64, error) {
+	if usd < 0 {
+		return -1, fmt.Errorf("cannot add negative usd, use deduct to deduct user money")
+	}
 	user, err := u.UDB.GetByUsername(username)
 	if err != nil {
 		return -1, err
@@ -153,6 +78,9 @@ func (u Users) AddUSD(username string, usd float64) (float64, error) {
 
 // deduct usd from user balance
 func (u Users) DeductUSD(username string, usd float64) (float64, error) {
+	if usd < 0 {
+		return -1, fmt.Errorf("cannot deduct negative usd, use add to add user money")
+	}
 	user, err := u.UDB.GetByUsername(username)
 	if err != nil {
 		return -1, err
@@ -166,4 +94,8 @@ func (u Users) DeductUSD(username string, usd float64) (float64, error) {
 		return -1, err
 	}
 	return money, nil
+}
+
+func (u Users) ValidateUser(username, password string) (bool, error) {
+	return u.UDB.Exists(username, password)
 }

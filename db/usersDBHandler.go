@@ -15,6 +15,7 @@ const (
 	insertUser                    = "INSERT INTO USERS (username, email, password,usd) VALUES (?,?,?,?);"
 	selectUser                    = "SELECT username, email, usd FROM USERS where username=?;"
 	updateUserUSD                 = "UPDATE USERS SET usd = ? WHERE username=?;"
+	existsUser                    = "SELECT COUNT(1) FROM USERS WHERE username=? AND password=?;"
 )
 
 // Handles sql operations to USERS table
@@ -135,4 +136,18 @@ func (u UsersDBHandler) UpdateUSD(username string, money float64) error {
 		return fmt.Errorf("could not update the money of user username=%s, usd=%f", username, money)
 	}
 	return nil
+}
+
+func (u UsersDBHandler) Exists(username, password string) (bool, error) {
+	row := u.conn.QueryRow(existsUser, username, password)
+
+	var exists int
+	if err := row.Scan(&exists); err != nil {
+		return false, fmt.Errorf("could not check user row existence, %v", err)
+	}
+
+	if exists == 1 {
+		return true, nil
+	}
+	return false, nil
 }

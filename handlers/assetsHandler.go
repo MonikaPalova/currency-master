@@ -8,8 +8,8 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/MonikaPalova/currency-master/httputils"
-	"github.com/MonikaPalova/currency-master/svc"
+	"github.com/MonikaPalova/currency-master/coinapi"
+	"github.com/MonikaPalova/currency-master/utils"
 )
 
 const (
@@ -19,7 +19,12 @@ const (
 
 // assets API
 type AssetsHandler struct {
-	Svc *svc.Assets
+	Svc assetsSvc
+}
+
+type assetsSvc interface {
+	GetAssetPage(page, size int) (*coinapi.AssetPage, error)
+	GetAssetById(id string) (*coinapi.Asset, error)
 }
 
 // gets a page of assets
@@ -29,22 +34,22 @@ func (a AssetsHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	size := getQueryParam(queryParams.Get("size"), defaultSize)
 
 	if page <= 0 || size <= 0 {
-		httputils.RespondWithError(w, http.StatusBadRequest, nil, "page and size must be specified and positive numbers")
+		utils.RespondWithError(w, http.StatusBadRequest, nil, "page and size must be specified and positive numbers")
 		return
 	}
 
 	assetsPage, err := a.Svc.GetAssetPage(page, size)
 	if err != nil {
-		httputils.RespondWithError(w, http.StatusInternalServerError, err, "Could not retrieve assets from external api")
+		utils.RespondWithError(w, http.StatusInternalServerError, err, "Could not retrieve assets from external api")
 		return
 	}
 
 	jsonResponse, err := json.Marshal(assetsPage)
 	if err != nil {
-		httputils.RespondWithError(w, http.StatusInternalServerError, err, "Could not convert assets to JSON")
+		utils.RespondWithError(w, http.StatusInternalServerError, err, "Could not convert assets to JSON")
 		return
 	}
-	httputils.RespondOK(w, jsonResponse)
+	w.Write(jsonResponse)
 }
 
 func getQueryParam(actual string, defaultValue int) int {
@@ -61,18 +66,18 @@ func (a AssetsHandler) GetById(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 	asset, err := a.Svc.GetAssetById(id)
 	if err != nil {
-		httputils.RespondWithError(w, http.StatusInternalServerError, err, fmt.Sprintf("Could not retrieve asset with id %s from external api", id))
+		utils.RespondWithError(w, http.StatusInternalServerError, err, fmt.Sprintf("Could not retrieve asset with id %s from external api", id))
 		return
 	}
 	if asset == nil {
-		httputils.RespondWithError(w, http.StatusNotFound, nil, fmt.Sprintf("Asset with id %s doesn't exist", id))
+		utils.RespondWithError(w, http.StatusNotFound, nil, fmt.Sprintf("Asset with id %s doesn't exist", id))
 		return
 	}
 
 	jsonResponse, err := json.Marshal(*asset)
 	if err != nil {
-		httputils.RespondWithError(w, http.StatusInternalServerError, err, "Couldn not convert asset to JSON")
+		utils.RespondWithError(w, http.StatusInternalServerError, err, "Couldn not convert asset to JSON")
 		return
 	}
-	httputils.RespondOK(w, jsonResponse)
+	w.Write(jsonResponse)
 }

@@ -27,10 +27,3 @@ CREATE TABLE IF NOT EXISTS `ACQUISITIONS` (
     FOREIGN KEY (username) REFERENCES USERS(username),
     CONSTRAINT PK_USER_ASSET PRIMARY KEY (username,asset_id,created)
 );
-
--- CREATE TABLE IF NOT EXISTS `SESSIONS` (
---     `id` VARCHAR(128) NOT NULL PRIMARY KEY,
---     `owner` VARCHAR(36) NOT NULL,
---     `expiration` DATETIME NOT NULL,
---     FOREIGN KEY (owner) REFERENCES USERS(username)
--- );

@@ -12,25 +12,11 @@ tags:
 - name: "Assets"
 - name: "Acquisitions"
 paths:
-  /users/{username}/login:
+  /login:
     post:
       tags:
       - "Authentication"
       summary: "Create a new session and set cookie for user"
-      requestBody:
-        description: "Login credentials"
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/LoginCredentials"
-      parameters:
-      - name: "username"
-        in: "path"
-        description: "Username of user to log in"
-        required: true
-        schema:
-          type: "string"
       responses:
         "200":
           description: "Session was created and cookie is set"
@@ -38,22 +24,18 @@ paths:
             Set-Cookie:
               schema: 
                 type: "string"
-                example: "CURRENCY_MASTER_SESSION_ID=abcde12345; Path=/; HttpOnly"
+                example: 'CURRENCY-MASTER-SESSION-ID=431dsa77-e4bb-4360-9335-a523a6de06d6;Expires=Thu, 17 Feb 2022 02:49:28 GMT'
         "401":
           description: "Incorrect credentials"
-      security: []
-  /users/{username}/logout:
+        "500":
+          description: "Internal server error occured"
+      security:
+        - basicAuth: []
+  /logout:
     post:
       tags:
       - "Authentication"
       summary: "Deletes the session of the user if it exists"
-      parameters:
-      - name: "username"
-        in: "path"
-        description: "Username of user to log out"
-        required: true
-        schema:
-          type: "string"
       responses:
         "200":
           description: "Session was deleted successfully"
@@ -61,7 +43,11 @@ paths:
             Set-Cookie:
               schema: 
                 type: "string"
-                example: ""
+                example: ''
+        "401":
+          description: "This request requires authentication"
+        "500":
+          description: "Internal server error occured"
       security:
         - cookieAuth: []
   /users:
@@ -78,10 +64,6 @@ paths:
                 type: array
                 items: 
                   $ref: "#/components/schemas/User"
-        "401":
-          description: "This request requires authentication"
-      security:
-        - cookieAuth: []
     post:
       tags:
       - "Users"
@@ -104,7 +86,8 @@ paths:
           description: "User parameters are missing or incorrect"
         "409":
           description: "User with username already exists"
-      security: []
+        "500":
+          description: "Internal server error occured"
   /users/{username}:
     get:
       tags:
@@ -124,12 +107,10 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/User"
-        "401":
-          description: "This request requires authentication"
         "404":
           description: "User is not found"
-      security:
-        - cookieAuth: []
+        "500":
+          description: "Internal server error occured"
   /users/{username}/assets:
     get:
       tags:
@@ -151,12 +132,6 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/UserAsset"
-        "401":
-          description: "This request requires authentication"
-        "404":
-          description: "User is not found"
-      security:
-        - cookieAuth: []
   /users/{username}/assets/{id}:
     get:
       tags:
@@ -182,12 +157,10 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/UserAsset"
-        "401":
-          description: "This request requires authentication"
         "404":
-          description: "User is not found"
-      security:
-        - cookieAuth: []
+          description: "User is not found or user has no such asset"
+        "500":
+          description: "Internal server error occured"
   /users/{username}/assets/{id}/buy:
     post:
       tags:
@@ -221,10 +194,14 @@ paths:
                 $ref: "#/components/schemas/Acquisition"
         "401":
           description: "This request requires authentication"
+        "403":
+          description: "Not allowed to buy assets for another user"
         "404":
           description: "User is not found or asset with this id doesn't exist"
         "409":
           description: "Not enough money"
+        "500":
+          description: "Internal server error occured"
       security:
         - cookieAuth: []
   /users/{username}/assets/{id}/sell:
@@ -260,12 +237,16 @@ paths:
                 $ref: "#/components/schemas/AssetOperationResponse"
         "401":
           description: "This request requires authentication"
+        "403":
+          description: "Not allowed to sell another user's assets"
         "404":
           description: "User is not found or user doesn't have asset with this id"
         "409":
           description: "Not enough quantity to sell"
         "410":
           description: "User has quantity of the asset but the asset is discontinued and cannot be sold"
+        "500":
+          description: "Internal server error occured"
       security:
         - cookieAuth: []
   /assets:
@@ -297,12 +278,10 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/AssetPage"
-        "401":
-          description: "This request requires authentication"
         "400":
           description: "Page or size are set but are not positive integers"
-      security:
-        - cookieAuth: []
+        "500":
+          description: "Internal server error occured"
   /assets/{id}:
     get:
       tags:
@@ -322,17 +301,22 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Asset"
-        "401":
-          description: "This request requires authentication"
         "404":
           description: "Asset is not found"
-      security:
-        - cookieAuth: []
+        "500":
+          description: "Internal server error occured"
   /acquisitions:
     get:
       tags:
       - "Acquisitions"
       summary: "Get acquisitions"
+      parameters:
+      - in: query
+        name: username
+        schema:
+          type: string
+        required: false
+        description: Filter by username
       responses:
         "200":
           description: "List of all acquisitions"
@@ -342,24 +326,18 @@ paths:
                 type: array
                 items: 
                   $ref: "#/components/schemas/Acquisition"
-        "401":
-          description: "This request requires authentication"
-      security:
-        - cookieAuth: []
+        "500":
+          description: "Internal server error occured"
 components:
   securitySchemes:
     cookieAuth:
       type: apiKey
-      in: cookie
-      name: CURRENCY_MASTER_SESSION_ID
+      in: header
+      name: Set-Cookie
+    basicAuth:
+      type: http
+      scheme: basic
   schemas:
-    LoginCredentials:
-      type: "object"
-      required:
-        - base64password
-      properties:
-        base64password:
-          type: string
     User:
       type: "object"
       properties:
@@ -395,7 +373,7 @@ components:
           type: string
         email:
           type: string
-        base64Password:
+        password:
           type: string
     Asset:
       type: object

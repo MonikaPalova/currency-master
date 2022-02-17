@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-const minutesToKeepCache = 5
+const minutesToKeepCache = 30
 
 // Cache object which keeps information about assets received from external api
 type Cache struct {
@@ -15,7 +15,7 @@ type Cache struct {
 
 // Cache constructor
 func NewCache() *Cache {
-	return &Cache{assets: []Asset{}, ids: make(map[string]int), expires: time.Now()}
+	return &Cache{assets: []Asset{}, ids: map[string]int{}, expires: time.Now()}
 }
 
 // clears cache and adds assets
@@ -52,7 +52,11 @@ func (c Cache) GetAsset(id string) *Asset {
 		c.cleanCache()
 		return nil
 	}
-	return &c.assets[c.ids[id]]
+	pos, ok := c.ids[id]
+	if !ok {
+		return nil
+	}
+	return &c.assets[pos]
 }
 
 // returns if cache is expired
@@ -62,4 +66,6 @@ func (c Cache) IsExpired() bool {
 
 func (c *Cache) cleanCache() {
 	c.assets = []Asset{}
+	c.ids = map[string]int{}
+	c.expires = time.Now()
 }

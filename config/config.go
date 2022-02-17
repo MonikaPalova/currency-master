@@ -1,5 +1,7 @@
 package config
 
+import "time"
+
 const (
 	user     = "root"
 	password = ""
@@ -12,7 +14,7 @@ type Mysql struct {
 
 // MySql configuration
 func NewMysql() *Mysql {
-	return &Mysql{user, password}
+	return &Mysql{User: user, Password: password}
 }
 
 const (
@@ -35,14 +37,42 @@ func NewCoinAPI() *CoinAPI {
 const (
 	host = "localhost"
 	port = "7777"
+
+	usersApiV1        = "/api/v1/users"
+	assetsApiV1       = "/api/v1/assets"
+	userAssetsApiV1   = "/api/v1/users/{username}/assets"
+	acquisitionsApiV1 = "/api/v1/acquisitions"
 )
 
 // Application configuration
 type App struct {
 	Host string
 	Port string
+
+	UsersApiV1        string
+	AssetsApiV1       string
+	UserAssetsApiV1   string
+	AcquisitionsApiV1 string
 }
 
 func NewApp() *App {
-	return &App{host, port}
+	return &App{Host: host, Port: port, UserAssetsApiV1: userAssetsApiV1, UsersApiV1: usersApiV1, AssetsApiV1: assetsApiV1, AcquisitionsApiV1: acquisitionsApiV1}
+}
+
+const (
+	sessionIDLength    = 64
+	sessionDuration    = time.Hour
+	sessionCookieName  = "CURRENCY-MASTER-SESSION-ID"
+	usernameCookieName = "CURRENCY-MASTER-USERNAME"
+)
+
+type Session struct {
+	SessionIDLength    int
+	SessionDuration    time.Duration
+	SessionCookieName  string
+	UsernameCookieName string
+}
+
+func NewSession() *Session {
+	return &Session{SessionIDLength: sessionIDLength, SessionDuration: sessionDuration, SessionCookieName: sessionCookieName, UsernameCookieName: usernameCookieName}
 }

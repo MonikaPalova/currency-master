@@ -7,18 +7,18 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/MonikaPalova/currency-master/db"
-	"github.com/MonikaPalova/currency-master/httputils"
+	"github.com/MonikaPalova/currency-master/auth"
 	"github.com/MonikaPalova/currency-master/model"
-	"github.com/MonikaPalova/currency-master/svc"
+	"github.com/MonikaPalova/currency-master/utils"
 	"github.com/gorilla/mux"
 )
 
 // user assets API
 type UserAssetsHandler struct {
-	ADB  *db.AcquisitionsDBHandler
-	ASvc *svc.Assets
-	USvc *svc.Users
+	ADB   acqDB
+	ASvc  assetsSvc
+	UaSvc userAssetsSvc
+	USvc  usersSvc
 }
 
 type userAssetOperation struct {
@@ -34,96 +34,110 @@ type userAssetOperationResponse struct {
 	Quantity float64 `json:"quantity"`
 }
 
+type userAssetsSvc interface {
+	GetByUsername(username string) ([]model.UserAsset, error)
+	GetByUsernameAndId(username, id string) (*model.UserAsset, error)
+	Create(asset model.UserAsset) (*model.UserAsset, error)
+	Update(asset model.UserAsset) (*model.UserAsset, error)
+	Delete(asset model.UserAsset) error
+}
+
 // gets all user assets for username
 func (u UserAssetsHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	username := mux.Vars(r)["username"]
-	assets, err := u.USvc.GetAssetsByUsername(username)
+	assets, err := u.UaSvc.GetByUsername(username)
 	if err != nil {
-		httputils.RespondWithError(w, http.StatusInternalServerError, err, fmt.Sprintf("could not get user assets for username=%s", username))
+		utils.RespondWithError(w, http.StatusInternalServerError, err, fmt.Sprintf("could not get user assets for username=%s", username))
 		return
 	}
 
 	jsonResponse, err := json.Marshal(assets)
 	if err != nil {
-		httputils.RespondWithError(w, http.StatusInternalServerError, err, "could not convert user assets to JSON")
+		utils.RespondWithError(w, http.StatusInternalServerError, err, "could not convert user assets to JSON")
 		return
 	}
-	httputils.RespondOK(w, jsonResponse)
+	w.Write(jsonResponse)
 }
 
 // gets user asset of user by asset id
 func (u UserAssetsHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	username := mux.Vars(r)["username"]
 	id := mux.Vars(r)["id"]
-	asset, err := u.USvc.GetAssetByUsernameAndId(username, id)
+	asset, err := u.UaSvc.GetByUsernameAndId(username, id)
 	if err != nil {
-		httputils.RespondWithError(w, http.StatusInternalServerError, err, fmt.Sprintf("could not retrieve user asset with username %s and id %s from database", username, id))
+		utils.RespondWithError(w, http.StatusInternalServerError, err, fmt.Sprintf("could not retrieve user asset with username %s and id %s from database", username, id))
 		return
 	}
 	if asset == nil {
-		httputils.RespondWithError(w, http.StatusNotFound, nil, fmt.Sprintf("user with username %s doesn't have asset with id %s", username, id))
+		utils.RespondWithError(w, http.StatusNotFound, nil, fmt.Sprintf("user with username %s doesn't have asset with id %s", username, id))
 		return
 	}
 
 	jsonResponse, err := json.Marshal(asset)
 	if err != nil {
-		httputils.RespondWithError(w, http.StatusInternalServerError, err, "Could not convert user asset to JSON")
+		utils.RespondWithError(w, http.StatusInternalServerError, err, "Could not convert user asset to JSON")
 		return
 	}
-	httputils.RespondOK(w, jsonResponse)
+	w.Write(jsonResponse)
 }
 
 // buys asset for user with the given quantity
 func (u UserAssetsHandler) Buy(w http.ResponseWriter, r *http.Request) {
 	operation, err := getOperation(r)
 	if err != nil {
-		httputils.RespondWithError(w, http.StatusBadRequest, err, "buy operation parameters are invalid")
+		utils.RespondWithError(w, http.StatusBadRequest, err, "buy operation parameters are invalid")
+		return
+	}
+
+	caller := auth.GetUser(r)
+	if caller != operation.username {
+		utils.RespondWithError(w, http.StatusForbidden, err, fmt.Sprintf("user can buy assets only for themselves, current user: %s", caller))
 		return
 	}
 
 	asset, err := u.ASvc.GetAssetById(operation.assetId)
 	if err != nil {
-		httputils.RespondWithError(w, http.StatusInternalServerError, err, fmt.Sprintf("Could not retrieve asset with id %s from external api", operation.assetId))
+		utils.RespondWithError(w, http.StatusInternalServerError, err, fmt.Sprintf("Could not retrieve asset with id %s from external api", operation.assetId))
 		return
 	}
 	if asset == nil {
-		httputils.RespondWithError(w, http.StatusNotFound, nil, fmt.Sprintf("Asset with id %s doesn't exist", operation.assetId))
+		utils.RespondWithError(w, http.StatusNotFound, nil, fmt.Sprintf("Asset with id %s doesn't exist", operation.assetId))
 		return
 	}
 
 	user, err := u.USvc.GetByUsername(operation.username, false)
 	if err != nil {
-		httputils.RespondWithError(w, http.StatusInternalServerError, err, fmt.Sprintf("Could not retrieve user with username %s from database", operation.username))
+		utils.RespondWithError(w, http.StatusInternalServerError, err, fmt.Sprintf("Could not retrieve user with username %s from database", operation.username))
 		return
 	}
 	if user == nil {
-		httputils.RespondWithError(w, http.StatusNotFound, err, fmt.Sprintf("User with username %s doesn't exist", operation.username))
+		utils.RespondWithError(w, http.StatusNotFound, err, fmt.Sprintf("User with username %s doesn't exist", operation.username))
 		return
 	}
 
 	price := operation.quantity * asset.PriceUSD
 	if price > user.USD {
-		httputils.RespondWithError(w, http.StatusConflict, nil, fmt.Sprintf("user with username %s doesn't have enough money to buy asset %s, needed: %f", operation.username, operation.assetId, price-user.USD))
+		utils.RespondWithError(w, http.StatusConflict, nil, fmt.Sprintf("user with username %s doesn't have enough money to buy asset %s, needed: %f", operation.username, operation.assetId, price-user.USD))
 		return
 	}
 
-	userAsset, err := u.USvc.GetAssetByUsernameAndId(operation.username, operation.assetId)
+	userAsset, err := u.UaSvc.GetByUsernameAndId(operation.username, operation.assetId)
 	if err != nil {
-		httputils.RespondWithError(w, http.StatusInternalServerError, err, fmt.Sprintf("could not retrieve user asset with username %s and id %s from database", operation.username, operation.assetId))
+		utils.RespondWithError(w, http.StatusInternalServerError, err, fmt.Sprintf("could not retrieve user asset with username %s and id %s from database", operation.username, operation.assetId))
 		return
 	}
 	if userAsset == nil {
 		userAsset = &model.UserAsset{Username: operation.username, AssetId: operation.assetId, Name: asset.Name, Quantity: operation.quantity}
-		_, err = u.USvc.CreateAsset(*userAsset)
+		_, err = u.UaSvc.Create(*userAsset)
 		if err != nil {
-			httputils.RespondWithError(w, http.StatusInternalServerError, err, "Could not create new user asset in database")
+			utils.RespondWithError(w, http.StatusInternalServerError, err, "Could not create new user asset in database")
 			return
 		}
 	} else {
 		userAsset.Quantity += operation.quantity
-		_, err = u.USvc.UpdateAsset(*userAsset)
+		_, err = u.UaSvc.Update(*userAsset)
 		if err != nil {
-			httputils.RespondWithError(w, http.StatusInternalServerError, err, "Could not update asset in database")
+			utils.RespondWithError(w, http.StatusInternalServerError, err, "Could not update asset in database")
 			return
 		}
 	}
@@ -131,69 +145,74 @@ func (u UserAssetsHandler) Buy(w http.ResponseWriter, r *http.Request) {
 	paid := operation.quantity * asset.PriceUSD
 	_, err = u.USvc.DeductUSD(operation.username, paid)
 	if err != nil {
-		httputils.RespondWithError(w, http.StatusInternalServerError, err, "Could not update user in database")
+		utils.RespondWithError(w, http.StatusInternalServerError, err, "Could not update user in database")
 		return
 	}
 
-	acq := model.Acquisition{Username: operation.username, AssetId: operation.assetId, Quantity: operation.quantity, PriceUSD: asset.PriceUSD, TotalUSD: paid, Created: time.Now()}
+	acq := model.Acquisition{Username: operation.username, AssetId: operation.assetId, Quantity: operation.quantity, PriceUSD: asset.PriceUSD, TotalUSD: paid, Created: time.Now().UTC()}
 	createdAcq, err := u.ADB.Create(acq)
 	if err != nil {
-		httputils.RespondWithError(w, http.StatusInternalServerError, err, "Could not save acquisition in database")
+		utils.RespondWithError(w, http.StatusInternalServerError, err, "Could not save acquisition in database")
 		return
 	}
 
 	jsonResponse, err := json.Marshal(createdAcq)
 	if err != nil {
-		httputils.RespondWithError(w, http.StatusInternalServerError, err, "Could not convert acquisition response to JSON")
+		utils.RespondWithError(w, http.StatusInternalServerError, err, "Could not convert acquisition response to JSON")
 		return
 	}
-	httputils.RespondOK(w, jsonResponse)
+	w.Write(jsonResponse)
 }
 
 // sells the given quantity of an asset owned by user
 func (u UserAssetsHandler) Sell(w http.ResponseWriter, r *http.Request) {
 	operation, err := getOperation(r)
 	if err != nil {
-		httputils.RespondWithError(w, http.StatusBadRequest, err, "sell operation parameters are invalid")
+		utils.RespondWithError(w, http.StatusBadRequest, err, "sell operation parameters are invalid")
 		return
 	}
 
-	userAsset, err := u.USvc.GetAssetByUsernameAndId(operation.username, operation.assetId)
+	caller := auth.GetUser(r)
+	if caller != operation.username {
+		utils.RespondWithError(w, http.StatusForbidden, err, "user can sell only their assets")
+		return
+	}
+
+	userAsset, err := u.UaSvc.GetByUsernameAndId(operation.username, operation.assetId)
 	if err != nil {
-		httputils.RespondWithError(w, http.StatusInternalServerError, err, fmt.Sprintf("could not retrieve user asset with username %s and id %s from database", operation.username, operation.assetId))
+		utils.RespondWithError(w, http.StatusInternalServerError, err, fmt.Sprintf("could not retrieve user asset with username %s and id %s from database", operation.username, operation.assetId))
 		return
 	}
 	if userAsset == nil {
-		httputils.RespondWithError(w, http.StatusNotFound, nil, fmt.Sprintf("user with username %s doesn't have asset with id %s", operation.username, operation.assetId))
+		utils.RespondWithError(w, http.StatusNotFound, nil, fmt.Sprintf("user with username %s doesn't have asset with id %s", operation.username, operation.assetId))
 		return
 	}
 
 	if operation.quantity > userAsset.Quantity {
-		httputils.RespondWithError(w, http.StatusConflict, nil, fmt.Sprintf("user with username %s doesn't have enough quantity of asset with id %s to sell", operation.username, operation.assetId))
+		utils.RespondWithError(w, http.StatusConflict, nil, fmt.Sprintf("user with username %s doesn't have enough quantity of asset with id %s to sell", operation.username, operation.assetId))
 		return
 	}
 
 	asset, err := u.ASvc.GetAssetById(operation.assetId)
 	if err != nil {
-		httputils.RespondWithError(w, http.StatusInternalServerError, err, fmt.Sprintf("Could not retrieve asset with id %s from external api", operation.assetId))
+		utils.RespondWithError(w, http.StatusInternalServerError, err, fmt.Sprintf("Could not retrieve asset with id %s from external api", operation.assetId))
 		return
 	}
 	if asset == nil {
-		httputils.RespondWithError(w, http.StatusNotFound, nil, fmt.Sprintf("Asset with id %s doesn't exist", operation.assetId))
+		utils.RespondWithError(w, http.StatusGone, nil, fmt.Sprintf("Asset with id %s doesn't exist", operation.assetId))
 		return
 	}
 
 	userAsset.Quantity -= operation.quantity
 	if userAsset.Quantity == 0 {
-		//TODO delete here wont be need after addding money spent/earned in user assets
-		if err := u.USvc.DeleteAsset(*userAsset); err != nil {
-			httputils.RespondWithError(w, http.StatusInternalServerError, err, "Could not delete asset from database")
+		if err := u.UaSvc.Delete(*userAsset); err != nil {
+			utils.RespondWithError(w, http.StatusInternalServerError, err, "Could not delete asset from database")
 			return
 		}
 	} else {
-		userAsset, err = u.USvc.UpdateAsset(*userAsset)
+		userAsset, err = u.UaSvc.Update(*userAsset)
 		if err != nil {
-			httputils.RespondWithError(w, http.StatusInternalServerError, err, "Could not update asset in database")
+			utils.RespondWithError(w, http.StatusInternalServerError, err, "Could not update asset in database")
 			return
 		}
 	}
@@ -201,17 +220,17 @@ func (u UserAssetsHandler) Sell(w http.ResponseWriter, r *http.Request) {
 	earned := operation.quantity * asset.PriceUSD
 	balance, err := u.USvc.AddUSD(operation.username, earned)
 	if err != nil {
-		httputils.RespondWithError(w, http.StatusInternalServerError, err, "Could not update user in database")
+		utils.RespondWithError(w, http.StatusInternalServerError, err, "Could not update user in database")
 		return
 	}
 
 	operationResponse := userAssetOperationResponse{Username: operation.username, AssetId: operation.assetId, Quantity: userAsset.Quantity, Balance: balance}
 	jsonResponse, err := json.Marshal(operationResponse)
 	if err != nil {
-		httputils.RespondWithError(w, http.StatusInternalServerError, err, "Could not convert sell operation response to JSON")
+		utils.RespondWithError(w, http.StatusInternalServerError, err, "Could not convert sell operation response to JSON")
 		return
 	}
-	httputils.RespondOK(w, jsonResponse)
+	w.Write(jsonResponse)
 }
 
 func getOperation(r *http.Request) (*userAssetOperation, error) {

@@ -18,8 +18,6 @@ type UserAsset struct {
 
 	// the usd value of the quantity if sold now
 	Valuation float64 `json:"valuation"`
-
-	// TODO : add usdSpent, usdEarned
 }
 
 // information about a specific asset purchase - receipt

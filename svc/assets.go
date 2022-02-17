@@ -10,12 +10,16 @@ import (
 // assets service which handles assets retrieval from cache and external api
 type Assets struct {
 	cache  *coinapi.Cache
-	client *coinapi.Client
+	client coinAPIClient
+}
+
+type coinAPIClient interface {
+	GetAssets() ([]coinapi.Asset, error)
 }
 
 // constructor
-func NewAssets() *Assets {
-	return &Assets{cache: coinapi.NewCache(), client: coinapi.NewClient()}
+func NewAssets(client coinAPIClient) *Assets {
+	return &Assets{cache: coinapi.NewCache(), client: client}
 }
 
 // gets a specific asset page
@@ -55,6 +59,9 @@ func (a Assets) Valuate(ua model.UserAsset) (float64, error) {
 	asset, err := a.GetAssetById(ua.AssetId)
 	if err != nil {
 		return -1, err
+	}
+	if asset == nil {
+		return -1, fmt.Errorf("there is no asset with id %s", ua.AssetId)
 	}
 
 	return asset.PriceUSD * ua.Quantity, nil
