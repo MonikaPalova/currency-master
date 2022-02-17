@@ -21,7 +21,6 @@ func (s Sessions) GetByID(id string) (*model.Session, error) {
 	if !ok {
 		return nil, fmt.Errorf("session with id %s doesn't exist", id)
 	}
-	fmt.Println(fmt.Sprintf("%v", session))
 	if session.IsExpired() {
 		return nil, fmt.Errorf("session with id %s is expired", id)
 	}

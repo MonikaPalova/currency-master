@@ -1,8 +1,6 @@
 package svc
 
 import (
-	"fmt"
-
 	"github.com/MonikaPalova/currency-master/model"
 )
 
@@ -23,7 +21,6 @@ func (v valuator) valUsers(users []model.User) ([]model.User, error) {
 }
 
 func (v valuator) valUser(user model.User) (*model.User, error) {
-	fmt.Println(fmt.Sprintf("Valuationg user %s with assets %v", user.Username, user.Assets))
 	valuation, valAssets, err := v.valAssets(user.Assets)
 	if err != nil {
 		return nil, err

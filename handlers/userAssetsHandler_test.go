@@ -1,15 +1,16 @@
 package handlers
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"testing"
+	"time"
 
+	"github.com/MonikaPalova/currency-master/auth"
 	"github.com/MonikaPalova/currency-master/coinapi"
 	"github.com/MonikaPalova/currency-master/model"
-	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -45,6 +46,32 @@ func (m mockUserAssetsSvc) Delete(asset model.UserAsset) error {
 	return args.Error(0)
 }
 
+type testCtx struct {
+	username string
+	id       string
+}
+
+func (m testCtx) Value(key interface{}) interface{} {
+	if reflect.TypeOf(key) == reflect.TypeOf(auth.CallerCtxKey) {
+		return m.username // wants caller
+	} else { // wants vars map
+		vars := map[string]string{}
+		vars["username"] = m.username
+		vars["id"] = m.id
+		return vars
+	}
+}
+
+func (m testCtx) Err() error {
+	return nil
+}
+func (m testCtx) Done() <-chan struct{} {
+	return nil
+}
+func (m testCtx) Deadline() (deadline time.Time, ok bool) {
+	return time.Now(), false
+}
+
 func TestUserAssetsHandler_GetAll(t *testing.T) {
 	type fields struct {
 		assets []model.UserAsset
@@ -68,14 +95,12 @@ func TestUserAssetsHandler_GetAll(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := httptest.NewRequest("GET", testAppConfig.AssetsApiV1+"/"+tt.args.username, nil)
-			r = mux.SetURLVars(r, map[string]string{
-				"username": tt.args.username,
-			})
 
 			mockUserAssetsSvc := new(mockUserAssetsSvc)
 			mockUserAssetsSvc.On("GetByUsername", tt.args.username).Return(tt.fields.assets, tt.fields.err)
 
 			u := UserAssetsHandler{UaSvc: mockUserAssetsSvc}
+			r = r.WithContext(testCtx{username: tt.args.username})
 			u.GetAll(tt.args.w, r)
 
 			if tt.args.w.Code != tt.wantStatusCode {
@@ -110,15 +135,12 @@ func TestUserAssetsHandler_GetByID(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := httptest.NewRequest("GET", testAppConfig.AssetsApiV1+"/"+tt.args.username+"/"+tt.args.id, nil)
-			r = mux.SetURLVars(r, map[string]string{
-				"username": tt.args.username,
-				"id":       tt.args.id,
-			})
 
 			mockUserAssetsSvc := new(mockUserAssetsSvc)
 			mockUserAssetsSvc.On("GetByUsernameAndId", tt.args.username, tt.args.id).Return(tt.fields.asset, tt.fields.err)
 
 			u := UserAssetsHandler{UaSvc: mockUserAssetsSvc}
+			r = r.WithContext(testCtx{username: tt.args.username, id: tt.args.id})
 			u.GetByID(tt.args.w, r)
 
 			if tt.args.w.Code != tt.wantStatusCode {
@@ -146,13 +168,10 @@ func TestUserAssetsHandler_Buy_BadRequest(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := httptest.NewRequest("POST", testAppConfig.AssetsApiV1+"/"+tt.args.username+"/"+tt.args.id+"/buy"+tt.args.query, nil)
-			r = mux.SetURLVars(r, map[string]string{
-				"username": tt.args.username,
-				"id":       tt.args.id,
-			})
+			r := httptest.NewRequest("POST", testAppConfig.UsersApiV1+"/"+tt.args.username+"/assets/"+tt.args.id+"/buy"+tt.args.query, nil)
 
 			u := UserAssetsHandler{}
+			r = r.WithContext(testCtx{username: tt.args.username, id: tt.args.id})
 			u.Buy(tt.args.w, r)
 
 			if tt.args.w.Code != tt.wantStatusCode {
@@ -184,11 +203,7 @@ func TestUserAssetsHandler_Buy_NotFound(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := httptest.NewRequest("POST", testAppConfig.AssetsApiV1+"/"+tt.args.username+"/"+tt.args.id+"/buy"+tt.args.query, nil)
-			r = mux.SetURLVars(r, map[string]string{
-				"username": tt.args.username,
-				"id":       tt.args.id,
-			})
+			r := httptest.NewRequest("POST", testAppConfig.UsersApiV1+"/"+tt.args.username+"/assets/"+tt.args.id+"/buy"+tt.args.query, nil)
 
 			mockUsersSvc := new(mockUsersSvc)
 			mockUsersSvc.On("GetByUsername", tt.args.username, false).Return(tt.fields.user, nil)
@@ -196,8 +211,8 @@ func TestUserAssetsHandler_Buy_NotFound(t *testing.T) {
 			mockAssetsSvc.On("GetAssetById", tt.args.id).Return(tt.fields.asset, nil)
 
 			u := UserAssetsHandler{USvc: mockUsersSvc, ASvc: mockAssetsSvc}
-			ctx := context.WithValue(r.Context(), "caller", tt.args.username)
-			u.Buy(tt.args.w, r.WithContext(ctx))
+			r = r.WithContext(testCtx{username: tt.args.username, id: tt.args.id})
+			u.Buy(tt.args.w, r)
 
 			if tt.args.w.Code != tt.wantStatusCode {
 				t.Fatalf("unexpected status code: got %v want %v", tt.args.w.Code, tt.wantStatusCode)
@@ -210,11 +225,7 @@ func TestUserAssetsHandler_Buy_NotFound(t *testing.T) {
 func TestUserAssetsHandler_Buy_NoMoney(t *testing.T) {
 	username := "u1"
 	id := "id1"
-	r := httptest.NewRequest("POST", testAppConfig.AssetsApiV1+"/"+username+"/"+id+"/buy?quantity=1", nil)
-	r = mux.SetURLVars(r, map[string]string{
-		"username": username,
-		"id":       id,
-	})
+	r := httptest.NewRequest("POST", testAppConfig.UsersApiV1+"/"+username+"/assets/"+id+"/buy?quantity=1", nil)
 
 	mockUsersSvc := new(mockUsersSvc)
 	mockUsersSvc.On("GetByUsername", username, false).Return(&model.User{Username: username, USD: 2}, nil)
@@ -223,8 +234,8 @@ func TestUserAssetsHandler_Buy_NoMoney(t *testing.T) {
 
 	u := UserAssetsHandler{USvc: mockUsersSvc, ASvc: mockAssetsSvc}
 	w := httptest.NewRecorder()
-	ctx := context.WithValue(r.Context(), "caller", username)
-	u.Buy(w, r.WithContext(ctx))
+	r = r.WithContext(testCtx{username: username, id: id})
+	u.Buy(w, r)
 
 	if w.Code != http.StatusConflict {
 		t.Fatalf("unexpected status code: got %v want %v", w.Code, http.StatusConflict)
@@ -239,11 +250,7 @@ func TestUserAssetsHandler_Buy_NewAsset(t *testing.T) {
 	a := coinapi.Asset{ID: id, PriceUSD: 2, Name: "n1"}
 	q := 1.0
 	ua := model.UserAsset{Username: username, AssetId: id, Name: a.Name, Quantity: q}
-	r := httptest.NewRequest("POST", testAppConfig.AssetsApiV1+"/"+username+"/"+id+"/buy?quantity=1", nil)
-	r = mux.SetURLVars(r, map[string]string{
-		"username": username,
-		"id":       id,
-	})
+	r := httptest.NewRequest("POST", testAppConfig.UsersApiV1+"/"+username+"/assets/"+id+"/buy?quantity=1", nil)
 
 	mockUsersSvc := new(mockUsersSvc)
 	mockUsersSvc.On("GetByUsername", username, false).Return(&model.User{Username: username, USD: 2}, nil)
@@ -258,8 +265,8 @@ func TestUserAssetsHandler_Buy_NewAsset(t *testing.T) {
 
 	u := UserAssetsHandler{USvc: mockUsersSvc, ASvc: mockAssetsSvc, UaSvc: mockUserAssetsSvc, ADB: mockAcqDB}
 	w := httptest.NewRecorder()
-	ctx := context.WithValue(r.Context(), "caller", username)
-	u.Buy(w, r.WithContext(ctx))
+	r = r.WithContext(testCtx{username: username, id: id})
+	u.Buy(w, r)
 
 	if w.Code != http.StatusOK {
 		t.Fatalf("unexpected status code: got %v want %v", w.Code, http.StatusOK)
@@ -277,11 +284,7 @@ func TestUserAssetsHandler_Buy_UpdateAsset(t *testing.T) {
 	q := 1.0
 	ua := model.UserAsset{Username: username, AssetId: id, Name: a.Name, Quantity: 2}
 	updatedUa := model.UserAsset{Username: username, AssetId: id, Name: a.Name, Quantity: 2 + q}
-	r := httptest.NewRequest("POST", testAppConfig.AssetsApiV1+"/"+username+"/"+id+"/buy?quantity=1", nil)
-	r = mux.SetURLVars(r, map[string]string{
-		"username": username,
-		"id":       id,
-	})
+	r := httptest.NewRequest("POST", testAppConfig.UsersApiV1+"/"+username+"/assets/"+id+"/buy?quantity=1", nil)
 
 	mockUsersSvc := new(mockUsersSvc)
 	mockUsersSvc.On("GetByUsername", username, false).Return(&model.User{Username: username, USD: 2}, nil)
@@ -296,8 +299,8 @@ func TestUserAssetsHandler_Buy_UpdateAsset(t *testing.T) {
 
 	u := UserAssetsHandler{USvc: mockUsersSvc, ASvc: mockAssetsSvc, UaSvc: mockUserAssetsSvc, ADB: mockAcqDB}
 	w := httptest.NewRecorder()
-	ctx := context.WithValue(r.Context(), "caller", username)
-	u.Buy(w, r.WithContext(ctx))
+	r = r.WithContext(testCtx{username: username, id: id})
+	u.Buy(w, r)
 
 	if w.Code != http.StatusOK {
 		t.Fatalf("unexpected status code: got %v want %v", w.Code, http.StatusOK)
@@ -325,13 +328,10 @@ func TestUserAssetsHandler_Sell_BadRequest(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := httptest.NewRequest("POST", testAppConfig.AssetsApiV1+"/"+tt.args.username+"/"+tt.args.id+"/sell"+tt.args.query, nil)
-			r = mux.SetURLVars(r, map[string]string{
-				"username": tt.args.username,
-				"id":       tt.args.id,
-			})
+			r := httptest.NewRequest("POST", testAppConfig.UsersApiV1+"/"+tt.args.username+"/assets/"+tt.args.id+"/sell"+tt.args.query, nil)
 
 			u := UserAssetsHandler{}
+			r = r.WithContext(testCtx{username: tt.args.username, id: tt.args.id})
 			u.Sell(tt.args.w, r)
 
 			if tt.args.w.Code != tt.wantStatusCode {
@@ -345,11 +345,7 @@ func TestUserAssetsHandler_Sell_Gone(t *testing.T) {
 	username := "u1"
 	id := "id1"
 	ua := model.UserAsset{Username: username, AssetId: id, Name: "name", Quantity: 2}
-	r := httptest.NewRequest("POST", testAppConfig.AssetsApiV1+"/"+username+"/"+id+"/sell?quantity=1", nil)
-	r = mux.SetURLVars(r, map[string]string{
-		"username": username,
-		"id":       id,
-	})
+	r := httptest.NewRequest("POST", testAppConfig.UsersApiV1+"/"+username+"/assets/"+id+"/sell?quantity=1", nil)
 
 	mockAssetsSvc := new(mockAssetsSvc)
 	mockAssetsSvc.On("GetAssetById", id).Return(nil, nil)
@@ -358,8 +354,8 @@ func TestUserAssetsHandler_Sell_Gone(t *testing.T) {
 
 	u := UserAssetsHandler{ASvc: mockAssetsSvc, UaSvc: mockUserAssetsSvc}
 	w := httptest.NewRecorder()
-	ctx := context.WithValue(r.Context(), "caller", username)
-	u.Sell(w, r.WithContext(ctx))
+	r = r.WithContext(testCtx{username: username, id: id})
+	u.Sell(w, r)
 
 	if w.Code != http.StatusGone {
 		t.Fatalf("unexpected status code: got %v want %v", w.Code, http.StatusGone)
@@ -372,19 +368,15 @@ func TestUserAssetsHandler_Sell_NoQuantity(t *testing.T) {
 	username := "u1"
 	id := "id1"
 	ua := model.UserAsset{Username: username, AssetId: id, Name: "name", Quantity: 2}
-	r := httptest.NewRequest("POST", testAppConfig.AssetsApiV1+"/"+username+"/"+id+"/sell?quantity=5", nil)
-	r = mux.SetURLVars(r, map[string]string{
-		"username": username,
-		"id":       id,
-	})
+	r := httptest.NewRequest("POST", testAppConfig.UsersApiV1+"/"+username+"/assets/"+id+"/sell?quantity=5", nil)
 
 	mockUserAssetsSvc := new(mockUserAssetsSvc)
 	mockUserAssetsSvc.On("GetByUsernameAndId", username, id).Return(&ua, nil)
 
 	u := UserAssetsHandler{UaSvc: mockUserAssetsSvc}
 	w := httptest.NewRecorder()
-	ctx := context.WithValue(r.Context(), "caller", username)
-	u.Sell(w, r.WithContext(ctx))
+	r = r.WithContext(testCtx{username: username, id: id})
+	u.Sell(w, r)
 
 	if w.Code != http.StatusConflict {
 		t.Fatalf("unexpected status code: got %v want %v", w.Code, http.StatusConflict)
@@ -395,19 +387,15 @@ func TestUserAssetsHandler_Sell_NoQuantity(t *testing.T) {
 func TestUserAssetsHandler_Sell_NoAsset(t *testing.T) {
 	username := "u1"
 	id := "id1"
-	r := httptest.NewRequest("POST", testAppConfig.AssetsApiV1+"/"+username+"/"+id+"/sell?quantity=5", nil)
-	r = mux.SetURLVars(r, map[string]string{
-		"username": username,
-		"id":       id,
-	})
+	r := httptest.NewRequest("POST", testAppConfig.UsersApiV1+"/"+username+"/assets/"+id+"/sell?quantity=5", nil)
 
 	mockUserAssetsSvc := new(mockUserAssetsSvc)
 	mockUserAssetsSvc.On("GetByUsernameAndId", username, id).Return(nil, nil)
 
 	u := UserAssetsHandler{UaSvc: mockUserAssetsSvc}
 	w := httptest.NewRecorder()
-	ctx := context.WithValue(r.Context(), "caller", username)
-	u.Sell(w, r.WithContext(ctx))
+	r = r.WithContext(testCtx{username: username, id: id})
+	u.Sell(w, r)
 
 	if w.Code != http.StatusNotFound {
 		t.Fatalf("unexpected status code: got %v want %v", w.Code, http.StatusNotFound)
@@ -421,11 +409,7 @@ func TestUserAssetsHandler_Sell_Ok(t *testing.T) {
 	a := coinapi.Asset{ID: id, PriceUSD: 2, Name: "n1"}
 	ua := model.UserAsset{Username: username, AssetId: id, Name: a.Name, Quantity: 5}
 	updatedUa := model.UserAsset{Username: username, AssetId: id, Name: a.Name, Quantity: 5 - 1}
-	r := httptest.NewRequest("POST", testAppConfig.AssetsApiV1+"/"+username+"/"+id+"/sell?quantity=1", nil)
-	r = mux.SetURLVars(r, map[string]string{
-		"username": username,
-		"id":       id,
-	})
+	r := httptest.NewRequest("POST", testAppConfig.UsersApiV1+"/"+username+"/assets/"+id+"/sell?quantity=1", nil)
 
 	mockUserAssetsSvc := new(mockUserAssetsSvc)
 	mockUserAssetsSvc.On("GetByUsernameAndId", username, id).Return(&ua, nil)
@@ -437,8 +421,8 @@ func TestUserAssetsHandler_Sell_Ok(t *testing.T) {
 
 	u := UserAssetsHandler{UaSvc: mockUserAssetsSvc, ASvc: mockAssetsSvc, USvc: mockUsersSvc}
 	w := httptest.NewRecorder()
-	ctx := context.WithValue(r.Context(), "caller", username)
-	u.Sell(w, r.WithContext(ctx))
+	r = r.WithContext(testCtx{username: username, id: id})
+	u.Sell(w, r)
 
 	if w.Code != http.StatusOK {
 		t.Fatalf("unexpected status code: got %v want %v", w.Code, http.StatusOK)

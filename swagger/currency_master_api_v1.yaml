@@ -35,7 +35,7 @@ paths:
     post:
       tags:
       - "Authentication"
-      summary: "Deletes the session of the user if it exists"
+      summary: "Deletes the session of the user"
       responses:
         "200":
           description: "Session was deleted successfully"

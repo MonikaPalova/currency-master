@@ -11,9 +11,9 @@ import (
 	"github.com/MonikaPalova/currency-master/utils"
 )
 
-type sessionUserCtxKey string
+type SessionUserCtxKey string
 
-const callerCtxKey sessionUserCtxKey = "caller"
+const CallerCtxKey SessionUserCtxKey = "caller"
 
 type SessionAuth struct {
 	Config *config.Session
@@ -34,7 +34,7 @@ func (s SessionAuth) Middleware(next http.Handler) http.Handler {
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), callerCtxKey, session.Username)
+		ctx := context.WithValue(r.Context(), CallerCtxKey, session.Username)
 		log.Printf("User %s successfully authenticated", session.Username)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
@@ -42,5 +42,5 @@ func (s SessionAuth) Middleware(next http.Handler) http.Handler {
 
 // Retrieves user from request context
 func GetUser(r *http.Request) string {
-	return r.Context().Value(callerCtxKey).(string)
+	return r.Context().Value(CallerCtxKey).(string)
 }
