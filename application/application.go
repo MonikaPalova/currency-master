@@ -46,7 +46,7 @@ func (a *Application) initDB() {
 
 // Starts application
 func (a Application) Start() error {
-	log.Println("Starting application...")
+	log.Println("Starting server")
 	return http.ListenAndServe(a.config.Host+":"+a.config.Port, a.router)
 }
 
@@ -84,7 +84,7 @@ func (a *Application) setupUsersHandler() {
 }
 
 func (a *Application) setupUserAssetsHandler() {
-	userAssetsHandler := handlers.UserAssetsHandler{ASvc: a.svc.ASvc, USvc: a.svc.USvc, ADB: a.db.AcquisitionsDBHandler}
+	userAssetsHandler := handlers.UserAssetsHandler{ASvc: a.svc.ASvc, USvc: a.svc.USvc, UaSvc: a.svc.UaSvc, ADB: a.db.AcquisitionsDBHandler}
 	a.router.Path(a.config.UserAssetsApiV1).Methods(http.MethodGet).HandlerFunc(userAssetsHandler.GetAll)
 	a.router.Path(a.config.UserAssetsApiV1 + "/{id}").Methods(http.MethodGet).HandlerFunc(userAssetsHandler.GetByID)
 	a.auth.Path(a.config.UserAssetsApiV1 + "/{id}/buy").Methods(http.MethodPost).HandlerFunc(userAssetsHandler.Buy)

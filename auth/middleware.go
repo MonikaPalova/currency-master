@@ -30,7 +30,7 @@ func (s SessionAuth) Middleware(next http.Handler) http.Handler {
 		}
 		session, err := s.Svc.GetByID(sessionCookie.Value)
 		if err != nil {
-			utils.RespondWithError(w, http.StatusUnauthorized, err, "Session doesn't exist or is already expired")
+			utils.RespondWithError(w, http.StatusUnauthorized, err, "Invalid session")
 			return
 		}
 

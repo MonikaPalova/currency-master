@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 
@@ -42,7 +41,8 @@ func (a AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
-	cookie := r.Header["Cookie"]
-	fmt.Println(cookie)
-	// TODO
+	sessionCookie, _ := r.Cookie(a.SSvc.Config.SessionCookieName)
+	a.SSvc.Delete(sessionCookie.Value)
+
+	w.Write([]byte("Logged out successfully"))
 }

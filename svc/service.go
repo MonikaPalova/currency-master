@@ -20,7 +20,7 @@ func NewSvc(db *db.Database) *Service {
 	aSvc := NewAssets(coinapi.NewClient())
 	uSvc := &Users{UDB: db.UsersDBHandler, v: valuator{svc: aSvc}}
 	uaSvc := &UserAssets{UaDB: db.UserAssetsDBHandler, v: valuator{svc: aSvc}}
-	sSvc := &Sessions{sessions: map[string]model.Session{}, config: config.NewSession()}
+	sSvc := &Sessions{sessions: map[string]model.Session{}, Config: config.NewSession()}
 
 	return &Service{ASvc: aSvc, USvc: uSvc, UaSvc: uaSvc, SSvc: sSvc}
 }

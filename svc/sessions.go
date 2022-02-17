@@ -13,7 +13,7 @@ import (
 
 type Sessions struct {
 	sessions map[string]model.Session
-	config   *config.Session
+	Config   *config.Session
 }
 
 func (s Sessions) GetByID(id string) (*model.Session, error) {
@@ -21,6 +21,7 @@ func (s Sessions) GetByID(id string) (*model.Session, error) {
 	if !ok {
 		return nil, fmt.Errorf("session with id %s doesn't exist", id)
 	}
+	fmt.Println(fmt.Sprintf("%v", session))
 	if session.IsExpired() {
 		return nil, fmt.Errorf("session with id %s is expired", id)
 	}
@@ -31,17 +32,26 @@ func (s Sessions) CreateCookie(username string) *http.Cookie {
 	session := model.Session{
 		ID:         uuid.New().String(),
 		Username:   username,
-		Expiration: time.Now().Add(s.config.SessionDuration),
+		Expiration: time.Now().Add(s.Config.SessionDuration),
 	}
 	s.sessions[session.ID] = session
 
 	sessionCookie := http.Cookie{
-		Name:    s.config.SessionCookieName,
+		Name:    s.Config.SessionCookieName,
 		Value:   session.ID,
 		Expires: session.Expiration,
 	}
 
 	return &sessionCookie
+}
+
+func (s Sessions) Delete(id string) {
+	session, ok := s.sessions[id]
+	if ok {
+		session.Expiration = time.Now()
+		s.sessions[id] = session
+	}
+	log.Printf("Invalidated session with id %s", id)
 }
 
 func (s Sessions) ClearExpired() {

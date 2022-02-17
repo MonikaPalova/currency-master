@@ -30,7 +30,6 @@ type User struct {
 	Valuation float64 `json:"valuation"`
 }
 
-// TODO finish
 func (u User) ValidateData() error {
 	if strings.TrimSpace(u.Username) == "" {
 		return fmt.Errorf(notBlankErrTemplate, "username")
