@@ -1,6 +1,6 @@
 # currency-master
 
-To run documentation locally: `~/go/bin/godoc -http=:6060` in root dir
+To run documentation locally: `godoc -http=:6060` in root dir
 
 To execute tests with coverage:
 `
@@ -11,3 +11,8 @@ To execute tests with coverage:
 Prerequisites:
 
 - Mysql started on port 3306
+
+
+Improvements:
+
+- add config vars into environment variables
