@@ -11,11 +11,14 @@ import (
 	"github.com/google/uuid"
 )
 
+// Sessions service to handle sessions
 type Sessions struct {
 	sessions map[string]model.Session
 	Config   *config.Session
 }
 
+// Gets session by id if exists.
+// Returns error if sessions doesn't exist or is expired
 func (s Sessions) GetByID(id string) (*model.Session, error) {
 	session, ok := s.sessions[id]
 	if !ok {
@@ -27,6 +30,7 @@ func (s Sessions) GetByID(id string) (*model.Session, error) {
 	return &session, nil
 }
 
+// Creates new session for username and a session cookie
 func (s Sessions) CreateCookie(username string) *http.Cookie {
 	session := model.Session{
 		ID:         uuid.New().String(),
@@ -44,6 +48,7 @@ func (s Sessions) CreateCookie(username string) *http.Cookie {
 	return &sessionCookie
 }
 
+// Invalidates the cookie but keeps it in the array, to be deleted by the cron job
 func (s Sessions) Delete(id string) {
 	session, ok := s.sessions[id]
 	if ok {
@@ -53,11 +58,13 @@ func (s Sessions) Delete(id string) {
 	log.Printf("Invalidated session with id %s", id)
 }
 
-func (s Sessions) ClearExpired() {
+// Clears expired sessions
+func (s *Sessions) ClearExpired() {
 	old := len(s.sessions)
 	validSessions := map[string]model.Session{}
 	for _, session := range s.sessions {
 		if !session.IsExpired() {
+			fmt.Println("adding session " + session.ID)
 			validSessions[session.ID] = session
 		}
 	}

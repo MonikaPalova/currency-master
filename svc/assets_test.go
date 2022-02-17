@@ -16,7 +16,6 @@ type stubClient struct {
 }
 
 func (s stubClient) GetAssets() ([]coinapi.Asset, error) {
-	fmt.Println(fmt.Sprintf("Returning %v, %v", s.assets, s.err))
 	return s.assets, s.err
 }
 

@@ -11,7 +11,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// users API
+// Users API
 type UsersHandler struct {
 	Svc usersSvc
 }
